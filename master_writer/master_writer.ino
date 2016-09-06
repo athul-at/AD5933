@@ -78,7 +78,7 @@ void loop()
   else if(cmd == 1)
   {
   read_data = send_read_command(slave_adrs,reg_adrs);
-  Serial.print("Received value (hex):");
+  Serial.print("Received value (hex): ");
   Serial.println(read_data,HEX);
   }
   Serial.println(" ");

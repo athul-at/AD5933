@@ -2,7 +2,7 @@
 // Based on Wire Slave Receiver by Nicholas Zambetti <http://www.zambetti.com>
 // Author         : Athul Asokan Thulasi
 // Created on     : September 1, 2016
-// Last modified  : September 2, 2016
+// Last modified  : September 6, 2016
 
 #include <Wire.h>
 
@@ -28,15 +28,15 @@ byte reg_8A = 0;
 byte reg_8B = 0;
 // Status Register
 byte reg_8F = 0;
-// Temperature Data
-byte reg_92 = 0;
-byte reg_93 = 0;
+// Temperature Data (25 C)
+byte reg_92 = 0x03;
+byte reg_93 = 0x20;
 // Real Data
 byte reg_94 = 0;
-byte reg_95 = 0;
+byte reg_95 = 10;
 // Imaginary Data
 byte reg_96 = 0;
-byte reg_97 = 0;
+byte reg_97 = 10;
 /*******************************************/
 
 byte data_reg = 0xff;
@@ -56,9 +56,9 @@ void loop()
 // Function that executes whenever data is received from master 
 void receiveEvent(int howMany) 
 {
-  Serial.print("Received ");
-  Serial.print(howMany);
-  Serial.println(" bytes");
+  //Serial.print("Received ");
+  //Serial.print(howMany);
+  //Serial.println(" bytes");
    if (Wire.available() == 2)  //adrs,data OR adrs_ptr,adrs
    {
     byte byte1 = Wire.read(); 
@@ -87,101 +87,105 @@ void execute_cmd(byte byte1, byte byte2)
 {
   if(byte1 == 0xB0)  // Address Pointer 
   {
+    if(byte2 == 0x8F) // Checking for status
+    {
+      reg_8F = 0x0F; // All done
+    }
     switch (byte2) // Address
     {
     case 0x80:
       data_reg = reg_80; 
-      Serial.print("Register 80 Value: ");
+      Serial.print("Register: 80 Value: ");
       Serial.println(reg_80,HEX);
       break;
     case 0x81:
       data_reg = reg_81;
-       Serial.print("Register 81 Value: ");
+       Serial.print("Register: 81 Value: ");
       Serial.println(reg_81,HEX);
       break;
     case 0x82:
       data_reg = reg_82;
-       Serial.print("Register 82 Value: ");
+       Serial.print("Register: 82 Value: ");
       Serial.println(reg_82,HEX);
       break;
     case 0x83:
       data_reg = reg_83;
-       Serial.print("Register 83 Value: ");
+       Serial.print("Register: 83 Value: ");
       Serial.println(reg_83,HEX);
       break;
     case 0x84:
       data_reg = reg_84;
-       Serial.print("Register 84 Value: ");
+       Serial.print("Register: 84 Value: ");
       Serial.println(reg_84,HEX);
       break;
     case 0x85:
       data_reg = reg_85;
-       Serial.print("Register 85 Value: ");
+       Serial.print("Register: 85 Value: ");
       Serial.println(reg_85,HEX);
       break;
     case 0x86:
       data_reg = reg_86;
-      Serial.print("Register 86 Value: ");
+      Serial.print("Register: 86 Value: ");
       Serial.println(reg_86,HEX);
       break;
     case 0x87:
       data_reg = reg_87;
-      Serial.print("Register 87 Value: ");
+      Serial.print("Register: 87 Value: ");
       Serial.println(reg_87,HEX);
       break;
     case 0x88:
       data_reg = reg_88;
-      Serial.print("Register 88 Value: ");
+      Serial.print("Register: 88 Value: ");
       Serial.println(reg_88,HEX);
       break;
     case 0x89:
       data_reg = reg_89;
-      Serial.print("Register 89 Value: ");
+      Serial.print("Register: 89 Value: ");
       Serial.println(reg_89,HEX);
       break;
     case 0x8A:
       data_reg = reg_8A;
-      Serial.print("Register 8A Value: ");
+      Serial.print("Register: 8A Value: ");
       Serial.println(reg_8A,HEX);
       break; 
     case 0x8B:
       data_reg = reg_8B;
-      Serial.print("Register 8B Value: ");
+      Serial.print("Register: 8B Value: ");
       Serial.println(reg_8B,HEX);
       break; 
     case 0x8F:
       data_reg = reg_8F;
-      Serial.print("Register 8F Value: ");
+      Serial.print("Register: 8F Value: ");
       Serial.println(reg_8F,HEX);
       break;
     case 0x92:
       data_reg = reg_92;
-      Serial.print("Register 92 Value: ");
+      Serial.print("Register: 92 Value: ");
       Serial.println(reg_92,HEX);
       break;
     case 0x93:
       data_reg = reg_93;
-      Serial.print("Register 93 Value: ");
+      Serial.print("Register: 93 Value: ");
       Serial.println(reg_93,HEX);
       break;
     case 0x94:
       data_reg = reg_94;
-      Serial.print("Register 94 Value: ");
+      Serial.print("Register: 94 Value: ");
       Serial.println(reg_94,HEX);
       break;
     case 0x95:
       data_reg = reg_95;
-      Serial.print("Register 95 Value: "); 
+      Serial.print("Register: 95 Value: "); 
       Serial.println(reg_95,HEX);
       break;
     case 0x96:
       data_reg = reg_96;
-      Serial.print("Register 96 Value: "); 
+      Serial.print("Register: 96 Value: "); 
       Serial.println(reg_96,HEX);
       break;
     case 0x97:
       data_reg = reg_97;
-      Serial.print("Register 97 Value: "); 
+      Serial.print("Register: 97 Value: "); 
       Serial.println(reg_97,HEX);
       break;
     default:

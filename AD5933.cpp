@@ -115,7 +115,7 @@ unsigned long AD5933_GetRegisterValue(unsigned char registerAddress,
     {
         /* Set the register pointer. */
         writeData0 = AD5933_ADDR_POINTER;
-        writeData0 = registerAddress + byte;
+        writeData1 = registerAddress + byte;
         I2C_Write(AD5933_ADDRESS, writeData0,writeData1);
         /* Read Register Data. */
         readData[0] = 0xFF;
