@@ -8,7 +8,7 @@
 #include "AD5933.h" 
 #include <math.h>           
 
-//# define DEBUG 1
+# define DEBUG 1
 
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
@@ -27,8 +27,9 @@ double          glucose_concentration = 0.0;
 void setup() 
 {                
   Serial.begin(9600); 
-  Serial.println("Sweat glucose measurement program");
-  Serial.println("");
+  Serial.println("##############################################################################");
+  Serial.println("#                Sweat Glucose Measurement Program                           #");
+  Serial.println("##############################################################################");
   Serial.println("");
   Wire.begin(); 
   /* Reset the device. */
@@ -52,6 +53,7 @@ void setup()
                        1000,        // 1000 Hz
                        500);        // 500 increments
   Serial.println("Setting the sweep settings completed. . ");
+  Serial.println("");
 }
 
 // Loop routine runs over and over again forever
@@ -77,6 +79,8 @@ char user_input()
  Serial.println("##############################################################################");
  Serial.println("# 5. Write to Register                                                       #");
  Serial.println("# 6. Read from Register                                                      #");
+ Serial.println("# 7. Register Dump                                                           #");
+ Serial.println("##############################################################################");
  #endif
  Serial.println("##############################################################################");
  Serial.println("");
@@ -85,7 +89,7 @@ char user_input()
  Serial.print("User selected option:   ");
  Serial.println(in_byte-'0'); 
   #ifdef DEBUG
-    if ((in_byte >= '1')&&(in_byte <= '6'))
+    if ((in_byte >= '1')&&(in_byte <= '7'))
   #else
     if ((in_byte >= '1')&&(in_byte <= '4'))
   #endif
@@ -111,6 +115,7 @@ void execute_user_function(char inByte)
    unsigned char in_address = 0;;
    unsigned long  in_data = 0;
    unsigned long read_value = 0;
+   byte index;
    char adrs_buf[2];
    char data_buf[2];
  switch(inByte)
@@ -204,6 +209,24 @@ void execute_user_function(char inByte)
       Serial.print("Read value : ");
       Serial.println(read_value,HEX);
       break;
+    case '7':
+    Serial.println("Register Address, Register Value");
+      for (index = 0x80; index <= 0x97; index++)
+      {
+       if(!(((index>=0x80)&&(index<=0x8B))||(index==0x8F)||((index>=0x93)&&(index<=0x97))))
+        {
+        continue;
+        }
+       else
+        {
+          read_value = AD5933_GetRegisterValue(index,1);
+          Serial.print("0x");
+          Serial.print(index,HEX);
+          Serial.print(", 0x");
+          Serial.println(read_value,HEX);
+        }
+      }
+      break;
    default: 
       Serial.println("Invalid Option !!");
       Serial.println("");
@@ -216,7 +239,7 @@ void execute_user_function(char inByte)
 // Rewrite this function with a look up table of a poylnomial fit.
 double calculate_concentration(double delta_impedance)
 {
-  return delta_impedance*250.0;
+  return 31.7 + 2.55* log(delta_impedance-0.01); // Natural Log
 }
 
 // Function to convert a 2 char array (conatining 2 hex digits) to a single byte hexadecimal number.
