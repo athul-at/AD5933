@@ -71,8 +71,8 @@ void execute_user_function(char inByte)
    char input;
    char in_byte;
    unsigned long frequency =0;
-   unsigned short frequency_step = 0;
-   unsigned long stop_frequency = 0;
+   unsigned long frequency_step = 0;
+   unsigned short step_count = 0;
    unsigned long start_frequency =0 ;
    #endif
  switch(inByte)
@@ -228,13 +228,13 @@ void execute_user_function(char inByte)
       Serial.print("1. Enter the start frequency: ");
       start_frequency = read_number();
       Serial.println(start_frequency);
-      Serial.print("2. Enter the end frequency: ");
-      stop_frequency = read_number();
-      Serial.println(stop_frequency);
-      Serial.print("3. Enter the frequency step size: ");
-      frequency_step = (unsigned short)read_number();
+      Serial.print("2. Enter the frequency step size: ");
+      frequency_step = read_number();
       Serial.println(frequency_step);
-      AD5933_ConfigSweep(start_frequency,stop_frequency,frequency_step);
+      Serial.print("3. Enter the number of steps: ");
+      step_count = (unsigned short)read_number();
+      Serial.println(step_count);
+      AD5933_ConfigSweep(start_frequency,frequency_step,step_count);
       Serial.println(" Sweep setup completed");
       Serial.println("##############################################################################"); 
      break;

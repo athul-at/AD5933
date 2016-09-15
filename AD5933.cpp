@@ -137,6 +137,8 @@ void AD5933_Reset(void)
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_LB, 
                             AD5933_CONTROL_RESET | currentClockSource,
                             1);
+    Serial.print("Writing: 0x");Serial.print(AD5933_CONTROL_RESET | currentClockSource,HEX);Serial.print(" to Reg: 0x");Serial.println(AD5933_REG_CONTROL_LB,HEX);
+    
 }
 
 /***************************************************************************//**

@@ -51,7 +51,7 @@ void setup()
   Serial.println("");
    /*Configure the sweep parameters */
   AD5933_ConfigSweep(10000,       // 10 KHz
-                       50000,        // 50 KHz
+                       1000,        // 1 KHz increments
                        500);        // 500 increments
   Serial.println("Setting the sweep settings completed. . ");
   Serial.println("");
