@@ -22,6 +22,7 @@ char user_input()
  #endif
  Serial.println("##############################################################################");
  Serial.println("# Run the menu options sequentially                                          #");
+ Serial.println("# 0. Start Sweep                                                             #");
  Serial.println("# 1. Run Calibration                                                         #");
  Serial.println("# 2. Measure Impedance without sweat sample                                  #");
  Serial.println("# 3. Measure Impedance with sweat sample                                     #");
@@ -39,9 +40,9 @@ char user_input()
  Serial.print("User selected option:   ");
  Serial.println(in_byte); 
   #ifdef DEBUG
-    if (((in_byte >= '1')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'E'))||(((in_byte >= 'a')&&(in_byte >= 'e'))))
+    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'E'))||(((in_byte >= 'a')&&(in_byte >= 'e'))))
   #else
-    if ((in_byte >= '1')&&(in_byte <= '4'))
+    if ((in_byte >= '0')&&(in_byte <= '4'))
   #endif
   {
    #ifdef DEBUG
@@ -67,6 +68,7 @@ void execute_user_function(char inByte)
    byte index;
    char adrs_buf[2];
    char data_buf[2];
+   unsigned long calib_impedance = 48100;
    #ifdef DEBUG
    char input;
    char in_byte;
@@ -77,14 +79,22 @@ void execute_user_function(char inByte)
    #endif
  switch(inByte)
  {
+   case '0':
+       Serial.println("Starting the frequency sweep");
+       /* Start the sweep operation. */
+        AD5933_StartSweep();
+        break;
    case '1':
        Serial.println("Calibarting the AD5933. . .");
        Serial.println("");
        Serial.println("");
-        /* Start the sweep operation. */
-        AD5933_StartSweep();
         /* Calculate the gain factor for an impedance of 47kohms. */
-        gainFactor = AD5933_CalculateGainFactor(47000,AD5933_FUNCTION_REPEAT_FREQ);
+        #ifdef DEBUG
+        Serial.print("Enter the Calibration resistance value: ");
+        calib_impedance = read_number();
+        Serial.println(calib_impedance);
+        #endif
+       gainFactor = AD5933_CalculateGainFactor(calib_impedance,AD5933_FUNCTION_REPEAT_FREQ);
        Serial.print("Calculated Calibration Gain: ");
        Serial.println(gainFactor);
        Serial.println("");

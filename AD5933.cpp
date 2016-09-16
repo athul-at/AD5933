@@ -92,6 +92,9 @@ void AD5933_SetRegisterValue(unsigned char registerAddress,
         writeData0 = registerAddress + bytesNumber - byte - 1;
         writeData1 = (unsigned char)((registerValue >> (byte * 8)) & 0xFF);
         I2C_Write(AD5933_ADDRESS, writeData0, writeData1);
+        #ifdef DEBUG2
+        Serial.print("Writing: 0x");Serial.print(writeData1,HEX); Serial.print(" to Reg: 0x"); Serial.println(writeData0,HEX);
+        #endif
     }
 }
 
@@ -99,7 +102,7 @@ void AD5933_SetRegisterValue(unsigned char registerAddress,
  * @brief Reads the value of a register.
  *
  * @param registerAddress - Address of the register.
- * @param bytesNumber - Number of bytes.
+ * @param bytesNumber - Number of bytes. (Max 4)
  *
  * @return registerValue - Value of the register.
 *******************************************************************************/
@@ -117,9 +120,13 @@ unsigned long AD5933_GetRegisterValue(unsigned char registerAddress,
         writeData0 = AD5933_ADDR_POINTER;
         writeData1 = registerAddress + byte;
         I2C_Write(AD5933_ADDRESS, writeData0,writeData1);
+       
         /* Read Register Data. */
-        readData[0] = 0xFF;
+        readData[0] = 0x00;
         I2C_Read(AD5933_ADDRESS, readData);
+        #ifdef DEBUG2
+        Serial.print("Read: 0x");Serial.print(readData[0],HEX); Serial.print(" from Reg: 0x"); Serial.println(writeData1,HEX);
+        #endif
         registerValue = registerValue << 8;
         registerValue += readData[0];
     }
@@ -137,12 +144,10 @@ void AD5933_Reset(void)
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_LB, 
                             AD5933_CONTROL_RESET | currentClockSource,
                             1);
-    Serial.print("Writing: 0x");Serial.print(AD5933_CONTROL_RESET | currentClockSource,HEX);Serial.print(" to Reg: 0x");Serial.println(AD5933_REG_CONTROL_LB,HEX);
-    
 }
 
 /***************************************************************************//**
- * @brief Selects the source of the system clock.
+ * @brief Selects the source of the system clock, takes the system out of reset
  *
  * @param clkSource - Selects the source of the system clock.
  *                    Example: AD5933_CONTROL_INT_SYSCLK
@@ -160,7 +165,7 @@ void AD5933_SetSystemClk(char clkSource, unsigned long extClkFreq)
     }
     else
     {
-        currentSysClk = AD5933_INTERNAL_SYS_CLK;    // 16 MHz
+        currentSysClk = AD5933_INTERNAL_SYS_CLK;    // 16.77 MHz
     }
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_LB, currentClockSource, 1);
 }
@@ -295,6 +300,11 @@ void AD5933_StartSweep(void)
                        AD5933_CONTROL_RANGE(currentRange) | 
                        AD5933_CONTROL_PGA_GAIN(currentGain),
                        1);
+    /*AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
+                       AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_REPEAT_FREQ) | 
+                       AD5933_CONTROL_RANGE(currentRange) | 
+                       AD5933_CONTROL_PGA_GAIN(currentGain),
+                       1);*/ // ADDED BY ATHUL
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
                        AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_START_SWEEP) | 
                        AD5933_CONTROL_RANGE(currentRange) | 
@@ -339,8 +349,15 @@ double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,
     realData = AD5933_GetRegisterValue(AD5933_REG_REAL_DATA,2);
     imagData = AD5933_GetRegisterValue(AD5933_REG_IMAG_DATA,2);
     magnitude = sqrt((realData * realData) + (imagData * imagData));
-    gainFactor = 1 / (magnitude * calibrationImpedance);
-
+    //magnitude = abs(realData)*1.0;
+    //gainFactor = 1.0 / (magnitude * calibrationImpedance*1.0);
+    gainFactor =  (calibrationImpedance*1.0)/magnitude;
+    #ifdef DEBUG
+     Serial.print("R: ");Serial.println(realData);
+     Serial.print("I: ");Serial.println(imagData);
+     Serial.print("Magnitude: ");Serial.println(magnitude);
+     Serial.print("Gain Factor: ");Serial.println(gainFactor);
+    #endif
     return gainFactor;
 }
 
@@ -376,8 +393,14 @@ double AD5933_CalculateImpedance(double gainFactor,
     realData = AD5933_GetRegisterValue(AD5933_REG_REAL_DATA,2);
     imagData = AD5933_GetRegisterValue(AD5933_REG_IMAG_DATA,2);
     magnitude = sqrt((realData * realData) + (imagData * imagData));
-    impedance = 1 / (magnitude * gainFactor);
-    
+    //impedance = 1 / (magnitude * gainFactor);
+    impedance = (magnitude * gainFactor);
+    #ifdef DEBUG
+     Serial.print("R: ");Serial.println(realData);
+     Serial.print("I: ");Serial.println(imagData);
+     Serial.print("Magnitude: ");Serial.println(magnitude);
+     Serial.print("Impedance: ");Serial.println(impedance);
+    #endif
     return impedance;    
 }
 

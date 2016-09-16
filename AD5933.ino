@@ -14,10 +14,10 @@
 /************************ Variables Definitions *******************************/
 /******************************************************************************/
 unsigned short  temperature = 0;
-unsigned long   impedanceK  = 0;
-double          impedance   = 0;
-double          gainFactor  = 0.0;
-double          baseline_impedance =0.0;
+double          impedanceK  = 0.0;
+double          impedance   = 0.0;
+double          gainFactor  = 1.0;
+double          baseline_impedance = 0.0;
 double          sweat_impedance = 0.0;
 double          delta_impedance = 0.0;
 double          glucose_concentration = 0.0;
@@ -55,6 +55,8 @@ void setup()
                        500);        // 500 increments
   Serial.println("Setting the sweep settings completed. . ");
   Serial.println("");
+  /* Starting frequency sweep*/
+  AD5933_StartSweep();
  #endif
 }
 
