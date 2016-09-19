@@ -8,7 +8,11 @@
 #include "AD5933.h" 
 #include <math.h>           
 
-
+# define RANGE AD5933_RANGE_2000mVpp
+# define GAIN AD5933_GAIN_X1
+ unsigned int increment_number = 10;
+ unsigned int start_freq = 10000;
+ unsigned int freq_step = 1000;
 
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
@@ -21,11 +25,22 @@ double          baseline_impedance = 0.0;
 double          sweat_impedance = 0.0;
 double          delta_impedance = 0.0;
 double          glucose_concentration = 0.0;
+
+
 /******************************************************************************/
 
 // Setup routine runs once when you press reset:
 void setup() 
-{                
+{  
+  unsigned char in_address = 0;;
+  unsigned long  in_data = 0;
+  unsigned long read_value = 0;
+  byte index;
+  char adrs_buf[2];
+  char data_buf[2];
+  unsigned long calib_impedance = 9970; //9.97K Ohm  
+  double system_phase = 0.0;
+  double impedance_phase = 0.0;          
   Serial.begin(9600); 
   Serial.println("##############################################################################");
   Serial.println("#                Sweat Glucose Measurement Program                           #");
@@ -36,10 +51,10 @@ void setup()
   AD5933_Reset();
   Serial.println("Reset completed. .");
   /* Select the source of the AD5933 system clock. */
-  AD5933_SetSystemClk(AD5933_CONTROL_INT_SYSCLK, 16000000ul);
+  AD5933_SetSystemClk(AD5933_CONTROL_INT_SYSCLK, 1000000ul);
   Serial.println("Clock Setup completed");
   /* Set range and gain. */
-  AD5933_SetRangeAndGain(AD5933_RANGE_2000mVpp, AD5933_GAIN_X1);
+  AD5933_SetRangeAndGain(RANGE,GAIN);
   Serial.println("Setting range and gain done. .");
   /* Read the temperature. */
   temperature = AD5933_GetTemperature();
@@ -48,23 +63,83 @@ void setup()
   Serial.print(temperature);
   Serial.println(" C");
   Serial.println("");
+
    /*Configure the sweep parameters */
-  AD5933_ConfigSweep(10000,       // 10 KHz
-                       1000,        // 1 KHz increments
-                       50);        // 500 increments
+  AD5933_ConfigSweep(start_freq,       // 10 KHz
+                       freq_step,        // 1 KHz increments
+                       increment_number);        // 500 increments
   Serial.println("Setting the sweep settings completed. . ");
   Serial.println("");
   /* Starting frequency sweep*/
   AD5933_StartSweep();
+  Serial.print("Enter the Calibration resistance value: ");
+  calib_impedance = read_number();
+  Serial.println(calib_impedance);
+  gainFactor = AD5933_CalculateGainFactor(calib_impedance,AD5933_FUNCTION_REPEAT_FREQ);
+  Serial.print("Calculated Calibration Gain: ");
+  Serial.println(gainFactor);
+  Serial.println("Measuring baseline impedance. . .");
+  Serial.println(" Enter any key to continue..");
+  while(Serial.available() == 0);
+  while(Serial.available() >0)
+  {
+      Serial.read();
+  }
+  Serial.println("");
+  Serial.println("");
+  Serial.println("Frequency , Baseline Impedance (Ohms) , Phase (degrees) ");
+  for(int i = 0; i<increment_number; i++)
+  {
+    impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_INC_FREQ);
+    baseline_impedance = impedance;
+    Serial.print(start_freq + freq_step*i);
+    Serial.print(",");
+    Serial.print(baseline_impedance);
+    Serial.print(",");
+    Serial.println(impedance_phase);
+  }
+  Serial.println("");
+  Serial.println("");
+  /* Reset the device. */
+  AD5933_Reset();
+  Serial.println("Reset completed. .");
+  /* Set range and gain. */
+  AD5933_SetRangeAndGain(RANGE,GAIN);
+  Serial.println("Setting range and gain done. .");
+     /*Configure the sweep parameters */
+  AD5933_ConfigSweep(start_freq,       // 10 KHz
+                       freq_step,        // 1 KHz increments
+                       increment_number);        // 500 increments
+  Serial.println("Setting the sweep settings completed. . ");
+  Serial.println("");
+  /* Starting frequency sweep*/
+  AD5933_StartSweep();
+  Serial.println("Measuring sweat impedance. . .");
+  Serial.println(" Enter any key to continue.."); 
+  while(Serial.available() == 0);
+  while(Serial.available() >0)
+  {
+      Serial.read();
+  }  
+  Serial.println("");
+  Serial.println("");
+  Serial.println("Frequency , Sweat Impedance (Ohms) , Phase (degrees) ");
+  for(int i = 0; i<increment_number; i++)
+  {
+    impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_INC_FREQ);
+    baseline_impedance = impedance;
+    Serial.print(start_freq + freq_step*i);
+    Serial.print(",");
+    Serial.print(baseline_impedance);
+    Serial.print(",");
+    Serial.println(impedance_phase);
+  }
+                  
 }
 
 // Loop routine runs over and over again forever
 void loop()
 {
-   //Serial.println("Inside the loop function");
-   char usr_sel;
-   usr_sel = user_input();
-   execute_user_function(usr_sel);
 }
 
 

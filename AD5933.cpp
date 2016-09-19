@@ -479,5 +479,30 @@ double rad2degree(signed short R, signed short I)
   return phase_degree;
 }
 
-/*************************************************************************************/
 
+/***************************************************************************//**
+ * @brief - Function that calculates the sweat glucose concentration from the change in impedance.
+  Rewrite this function with a look up table or a poylnomial fit (which ever is better)
+ ********************************************************************************/
+double calculate_concentration(double delta_impedance)
+{
+  return 31.7 + 2.55* log(delta_impedance-0.01); // Natural Log
+}
+
+/*****************************************************************************
+ * @brief  Function that reads a number from serial port
+ * 
+********************************************************************************/
+
+unsigned long read_number()
+{
+      unsigned long num = 0;
+      while(Serial.available() == 0);
+      while(Serial.available() > 0)
+       {
+        num = num*10 + Serial.parseInt();
+       }
+      return num;
+}
+
+/*************************************************************************************/

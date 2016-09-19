@@ -42,8 +42,7 @@
 #ifndef __AD5933_H__
 #define __AD5933_H__
 
-# define DEBUG 1
-# define DEBUG2 1
+/*! #define DEBUG2*/
 
 /******************************************************************************/
 /************************** AD5933 Definitions ********************************/
@@ -162,17 +161,8 @@ void I2C_Write(unsigned char slave_adrs,
                unsigned char reg_adrs,
                unsigned char data);
 
-/*! Reads the user input */
-char user_input();
-
-/*! Execute the functions specified by user the user input */
-void execute_user_function(char inByte);
-
 /*! Function to calculate the sweat glucose concentration from the impedance difference */
 double calculate_concentration(double delta_impedance);
-
-/*! Function that converts a serial input 2 characters to a single hexadecimal number */ 
-unsigned long char2hex(char buf[]);
 
 /*! Function that reads a number from serial port*/
 unsigned long read_number();

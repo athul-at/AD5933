@@ -1,0 +1,56 @@
+Resistances Used
+Calibration: 9.97K
+RFB: 5K
+Baseline: 25.7K
+Sweat: 22.1K
+
+##############################################################################
+#                Sweat Glucose Measurement Program                           #
+##############################################################################
+
+Reset completed. .
+Clock Setup completed
+Setting range and gain done. .
+
+Temperature: 29 C
+
+Setting the sweep settings completed. . 
+
+Enter the Calibration resistance value: 9970
+Calculated Calibration Gain: 0.20
+Measuring baseline impedance. . .
+ Enter any key to continue..
+
+
+Frequency , Baseline Impedance (Ohms) , Phase (degrees) 
+10000,25827.12,0.00
+11000,25773.84,0.00
+12000,25717.14,0.00
+13000,25756.97,0.00
+14000,25802.83,0.00
+15000,25784.26,0.00
+16000,25790.78,0.00
+17000,25737.68,0.00
+18000,25881.70,0.00
+19000,25826.26,0.00
+
+
+Reset completed. .
+Setting range and gain done. .
+Setting the sweep settings completed. . 
+
+Measuring sweat impedance. . .
+ Enter any key to continue..
+
+
+Frequency , Sweat Impedance (Ohms) , Phase (degrees) 
+10000,22135.05,0.00
+11000,22089.55,0.00
+12000,22063.33,0.00
+13000,22065.46,0.00
+14000,22104.02,0.00
+15000,22013.53,0.00
+16000,22057.40,0.00
+17000,22062.96,0.00
+18000,22138.47,0.00
+19000,22117.86,0.00
