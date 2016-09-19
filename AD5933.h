@@ -151,6 +151,7 @@ double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,
 /*! Reads the real and the imaginary data and calculates the Impedance. */
 double AD5933_CalculateImpedance(double gainFactor,
                                  unsigned char freqFunction);
+                                 
 
 /*! Read one byte from the slave device over IIC */
 void I2C_Read(unsigned char slave_adrs,
@@ -175,5 +176,8 @@ unsigned long char2hex(char buf[]);
 
 /*! Function that reads a number from serial port*/
 unsigned long read_number();
+
+/*! Convert radians to degree */
+double rad2degree(signed short R, signed short I);
 
 #endif	/* __AD5933_H__ */

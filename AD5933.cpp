@@ -67,6 +67,8 @@ unsigned long currentSysClk      = AD5933_INTERNAL_SYS_CLK;
 unsigned char currentClockSource = AD5933_CONTROL_INT_SYSCLK;
 unsigned char currentGain        = AD5933_GAIN_X1;
 unsigned char currentRange       = AD5933_RANGE_2000mVpp;
+double system_phase = 0.0;
+double impedance_phase = 0.0;
 
 /******************************************************************************/
 /************************ Functions Definitions *******************************/
@@ -304,7 +306,7 @@ void AD5933_StartSweep(void)
                        AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_REPEAT_FREQ) | 
                        AD5933_CONTROL_RANGE(currentRange) | 
                        AD5933_CONTROL_PGA_GAIN(currentGain),
-                       1);*/ // ADDED BY ATHUL
+                       1);*/ /* ADDED BY ATHUL*/
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
                        AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_START_SWEEP) | 
                        AD5933_CONTROL_RANGE(currentRange) | 
@@ -334,6 +336,8 @@ double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,
     double        magnitude  = 0;
     signed short  realData   = 0;
     signed short  imagData   = 0;
+    unsigned long int R2 = 0L;
+    unsigned long int I2 = 0L;
     unsigned char status     = 0;
     
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
@@ -348,15 +352,20 @@ double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,
     }
     realData = AD5933_GetRegisterValue(AD5933_REG_REAL_DATA,2);
     imagData = AD5933_GetRegisterValue(AD5933_REG_IMAG_DATA,2);
-    magnitude = sqrt((realData * realData) + (imagData * imagData));
-    //magnitude = abs(realData)*1.0;
-    //gainFactor = 1.0 / (magnitude * calibrationImpedance*1.0);
-    gainFactor =  (calibrationImpedance*1.0)/magnitude;
-    #ifdef DEBUG
-     Serial.print("R: ");Serial.println(realData);
-     Serial.print("I: ");Serial.println(imagData);
+    system_phase = rad2degree(realData,imagData);
+    R2 = pow(realData,2);
+    I2 =pow(imagData,2);
+    magnitude = R2 + I2;
+    magnitude = sqrt(magnitude);
+    gainFactor = (1.0 / (magnitude * calibrationImpedance*1.0))*10000000;
+    #ifdef DEBUG2
+     Serial.print("R: ");Serial.print(realData);Serial.print(" R(HEX): 0x");Serial.println(realData,HEX);
+     Serial.print("I: ");Serial.print(imagData);Serial.print(" I(HEX): 0x");Serial.println(imagData,HEX);
+     Serial.print("R^2 :");Serial.println(R2);
+     Serial.print("I^2 :");Serial.println(I2);
      Serial.print("Magnitude: ");Serial.println(magnitude);
      Serial.print("Gain Factor: ");Serial.println(gainFactor);
+     Serial.print("System Phase: ");Serial.println(system_phase);
     #endif
     return gainFactor;
 }
@@ -378,6 +387,8 @@ double AD5933_CalculateImpedance(double gainFactor,
     signed short  imagData  = 0;
     double        magnitude = 0;
     double        impedance = 0;
+    unsigned long int R2 = 0L;
+    unsigned long int I2 = 0L;
     unsigned char status    = 0;
     
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
@@ -392,14 +403,21 @@ double AD5933_CalculateImpedance(double gainFactor,
     }
     realData = AD5933_GetRegisterValue(AD5933_REG_REAL_DATA,2);
     imagData = AD5933_GetRegisterValue(AD5933_REG_IMAG_DATA,2);
-    magnitude = sqrt((realData * realData) + (imagData * imagData));
-    //impedance = 1 / (magnitude * gainFactor);
-    impedance = (magnitude * gainFactor);
-    #ifdef DEBUG
-     Serial.print("R: ");Serial.println(realData);
-     Serial.print("I: ");Serial.println(imagData);
+    //magnitude = sqrt((realData * realData*1.0L) + (imagData * imagData*1.0L));
+    impedance_phase = rad2degree(realData,imagData)- system_phase;
+    R2 = pow(realData,2);
+    I2 =pow(imagData,2);
+    magnitude = R2 + I2;
+    magnitude = sqrt(magnitude);
+    impedance = 10000000.0 *(1.0 / (magnitude * gainFactor*1.0L)); 
+    #ifdef DEBUG2
+     Serial.print("R: ");Serial.print(realData);Serial.print(" R(HEX): 0x");Serial.println(realData,HEX);
+     Serial.print("I: ");Serial.print(imagData);Serial.print(" I(HEX): 0x");Serial.println(imagData,HEX);
+     Serial.print("R^2 :");Serial.println(R2);
+     Serial.print("I^2 :");Serial.println(I2);
      Serial.print("Magnitude: ");Serial.println(magnitude);
      Serial.print("Impedance: ");Serial.println(impedance);
+     Serial.print("Phase: ");Serial.println(impedance_phase);
     #endif
     return impedance;    
 }
@@ -423,7 +441,7 @@ void I2C_Write(unsigned char slave_adrs, unsigned char reg_adrs,unsigned char da
 }
 
 /***************************************************************************//**
- * @brief Writes 1 byte of data to the slave dvice
+ * @brief Writes 1 byte of data to the slave device
  *
  * @param slave_adrs - The address of the slave device to be read.
  * @param dataBuffer - The pointer to the location where data byte needs to stored.  
@@ -436,4 +454,30 @@ void I2C_Read(unsigned char slave_adrs,unsigned char* dataBuffer)
   *dataBuffer = Wire.read(); 
 }
 
+
+
+/***************************************************************************//**
+ * @brief Converts radians to degree
+ * Eg; double degrees = rad2degree(signed short Real_part, signed short Imaginary_part)
+
+*******************************************************************************/
+double rad2degree(signed short R, signed short I)
+{
+  double phase_degree =0.0;
+  if((R >=0)&&(I>=0))  // I st Quadrant
+  {
+    phase_degree = (atan2((I*1.0),(R*1.0))*180)/PI;
+  }
+  else if ((R >=0)&&(I<=0)) // IV rd Quadrant
+  {
+    phase_degree = 360+ ((atan2((I*1.0),(R*1.0))*180)/PI);
+  }
+  else  // IInd or IIIrd Quadrant
+  {
+     phase_degree = 180+((atan2((I*1.0),(R*1.0))*180)/PI);
+  }
+  return phase_degree;
+}
+
 /*************************************************************************************/
+

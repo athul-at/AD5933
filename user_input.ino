@@ -20,6 +20,9 @@ char user_input()
  Serial.println("# D. Configure Sweep                                                         #");
  Serial.println("# E. Get temperature ( Celsius )                                             #");
  #endif
+ #ifdef DEBUG2
+ Serial.println("# C. Set range and gain                                                      #");
+ #endif
  Serial.println("##############################################################################");
  Serial.println("# Run the menu options sequentially                                          #");
  Serial.println("# 0. Start Sweep                                                             #");
@@ -27,6 +30,7 @@ char user_input()
  Serial.println("# 2. Measure Impedance without sweat sample                                  #");
  Serial.println("# 3. Measure Impedance with sweat sample                                     #");
  Serial.println("# 4. Calculate Sweat Concentration                                           #");
+ Serial.println("##############################################################################");
  #ifdef DEBUG
  Serial.println("##############################################################################");
  Serial.println("# 5. Write to Register                                                       #");
@@ -39,7 +43,7 @@ char user_input()
  char in_byte = Serial.read();
  Serial.print("User selected option:   ");
  Serial.println(in_byte); 
-  #ifdef DEBUG
+  #ifdef DEBUG 
     if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'E'))||(((in_byte >= 'a')&&(in_byte >= 'e'))))
   #else
     if ((in_byte >= '0')&&(in_byte <= '4'))
@@ -68,7 +72,7 @@ void execute_user_function(char inByte)
    byte index;
    char adrs_buf[2];
    char data_buf[2];
-   unsigned long calib_impedance = 48100;
+   unsigned long calib_impedance = 9970; //9.97K Ohm
    #ifdef DEBUG
    char input;
    char in_byte;
@@ -89,14 +93,14 @@ void execute_user_function(char inByte)
        Serial.println("");
        Serial.println("");
         /* Calculate the gain factor for an impedance of 47kohms. */
-        #ifdef DEBUG
+        #ifdef DEBUG2
         Serial.print("Enter the Calibration resistance value: ");
         calib_impedance = read_number();
         Serial.println(calib_impedance);
         #endif
        gainFactor = AD5933_CalculateGainFactor(calib_impedance,AD5933_FUNCTION_REPEAT_FREQ);
        Serial.print("Calculated Calibration Gain: ");
-       Serial.println(gainFactor);
+       Serial.println((double)gainFactor);
        Serial.println("");
        Serial.println("");
        break;
@@ -107,8 +111,8 @@ void execute_user_function(char inByte)
        impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_REPEAT_FREQ);
        impedanceK = (unsigned long)impedance;
        impedanceK /= 1000;
-       baseline_impedance = impedanceK;
-       Serial.print("Baseline Impedance (K Ohms): ");
+       baseline_impedance = impedance;
+       Serial.print("Baseline Impedance (Ohms): ");
        Serial.println(baseline_impedance);
        Serial.println("");
        Serial.println("");
@@ -121,8 +125,8 @@ void execute_user_function(char inByte)
       impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_REPEAT_FREQ);
       impedanceK = (unsigned long)impedance;
       impedanceK /= 1000;
-      sweat_impedance = impedanceK;
-      Serial.print("Impedance with sweat sample (K Ohms): ");
+      sweat_impedance = impedance;
+      Serial.print("Impedance with sweat sample (Ohms): ");
       Serial.println(sweat_impedance);
       Serial.println("");
       Serial.println("");

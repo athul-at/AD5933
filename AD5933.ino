@@ -32,7 +32,6 @@ void setup()
   Serial.println("##############################################################################");
   Serial.println("");
   Wire.begin(); 
- #ifndef DEBUG
  /* Reset the device. */
   AD5933_Reset();
   Serial.println("Reset completed. .");
@@ -52,12 +51,11 @@ void setup()
    /*Configure the sweep parameters */
   AD5933_ConfigSweep(10000,       // 10 KHz
                        1000,        // 1 KHz increments
-                       500);        // 500 increments
+                       50);        // 500 increments
   Serial.println("Setting the sweep settings completed. . ");
   Serial.println("");
   /* Starting frequency sweep*/
   AD5933_StartSweep();
- #endif
 }
 
 // Loop routine runs over and over again forever
