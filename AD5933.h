@@ -43,7 +43,7 @@
 #define __AD5933_H__
 
 # define DEBUG 1
-# define DEBUG2 1
+//# define DEBUG2 1
 
 /******************************************************************************/
 /************************** AD5933 Definitions ********************************/
@@ -143,6 +143,9 @@ void AD5933_ConfigSweep(unsigned long  startFreq,
 
 /*! Starts the sweep operation. */
 void AD5933_StartSweep(void);
+
+/*! Increments the frequency as set bt the ConfigSweep. */
+void AD5933_increment(void);
 
 /*! Reads the real and the imaginary data and calculates the Gain Factor. */
 double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,

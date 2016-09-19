@@ -36,7 +36,7 @@ void setup()
   AD5933_Reset();
   Serial.println("Reset completed. .");
   /* Select the source of the AD5933 system clock. */
-  AD5933_SetSystemClk(AD5933_CONTROL_INT_SYSCLK, 16000000ul);
+  AD5933_SetSystemClk(AD5933_CONTROL_EXT_SYSCLK, 16000000ul);
   Serial.println("Clock Setup completed");
   /* Set range and gain. */
   AD5933_SetRangeAndGain(AD5933_RANGE_2000mVpp, AD5933_GAIN_X1);
@@ -49,9 +49,9 @@ void setup()
   Serial.println(" C");
   Serial.println("");
    /*Configure the sweep parameters */
-  AD5933_ConfigSweep(10000,       // 10 KHz
-                       1000,        // 1 KHz increments
-                       50);        // 500 increments
+  AD5933_ConfigSweep(100,       // 100 Hz
+                       10,        // 10 Hz increments
+                       5);        // 5 increments
   Serial.println("Setting the sweep settings completed. . ");
   Serial.println("");
   /* Starting frequency sweep*/

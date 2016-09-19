@@ -302,11 +302,7 @@ void AD5933_StartSweep(void)
                        AD5933_CONTROL_RANGE(currentRange) | 
                        AD5933_CONTROL_PGA_GAIN(currentGain),
                        1);
-    /*AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
-                       AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_REPEAT_FREQ) | 
-                       AD5933_CONTROL_RANGE(currentRange) | 
-                       AD5933_CONTROL_PGA_GAIN(currentGain),
-                       1);*/ /* ADDED BY ATHUL*/
+                       
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
                        AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_START_SWEEP) | 
                        AD5933_CONTROL_RANGE(currentRange) | 
@@ -319,6 +315,19 @@ void AD5933_StartSweep(void)
     };
 }
 
+/***************************************************************************//**
+ * @brief Incremants the frequency as set by the config sweep function
+ *
+ * @return None.
+*******************************************************************************/
+void AD5933_increment(void)
+{
+   AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
+                       AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_INC_FREQ) | 
+                       AD5933_CONTROL_RANGE(currentRange) | 
+                       AD5933_CONTROL_PGA_GAIN(currentGain),
+                       1);
+}
 /***************************************************************************//**
  * @brief Reads the real and the imaginary data and calculates the Gain Factor.
  *
@@ -356,9 +365,11 @@ double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,
     R2 = pow(realData,2);
     I2 =pow(imagData,2);
     magnitude = R2 + I2;
+    Serial.print("R2 + I2: ");Serial.println(magnitude);
     magnitude = sqrt(magnitude);
-    gainFactor = (1.0 / (magnitude * calibrationImpedance*1.0))*10000000;
-    #ifdef DEBUG2
+    Serial.print("sqrt(magnitude): ");Serial.println(magnitude);
+    gainFactor = (1.0 / (magnitude * calibrationImpedance*1.0))*1000000000;
+    #ifdef DEBUG
      Serial.print("R: ");Serial.print(realData);Serial.print(" R(HEX): 0x");Serial.println(realData,HEX);
      Serial.print("I: ");Serial.print(imagData);Serial.print(" I(HEX): 0x");Serial.println(imagData,HEX);
      Serial.print("R^2 :");Serial.println(R2);
@@ -408,9 +419,11 @@ double AD5933_CalculateImpedance(double gainFactor,
     R2 = pow(realData,2);
     I2 =pow(imagData,2);
     magnitude = R2 + I2;
+    Serial.print("R2 + I2: ");Serial.println(magnitude);
     magnitude = sqrt(magnitude);
-    impedance = 10000000.0 *(1.0 / (magnitude * gainFactor*1.0L)); 
-    #ifdef DEBUG2
+    Serial.print("sqrt(magnitude): ");Serial.println(magnitude);
+    impedance = 1000000000.0 *(1.0 / (magnitude * gainFactor*1.0L)); 
+    #ifdef DEBUG
      Serial.print("R: ");Serial.print(realData);Serial.print(" R(HEX): 0x");Serial.println(realData,HEX);
      Serial.print("I: ");Serial.print(imagData);Serial.print(" I(HEX): 0x");Serial.println(imagData,HEX);
      Serial.print("R^2 :");Serial.println(R2);

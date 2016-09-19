@@ -19,9 +19,7 @@ char user_input()
  Serial.println("# C. Set range and gain                                                      #");
  Serial.println("# D. Configure Sweep                                                         #");
  Serial.println("# E. Get temperature ( Celsius )                                             #");
- #endif
- #ifdef DEBUG2
- Serial.println("# C. Set range and gain                                                      #");
+ Serial.println("# F. Increment frequency                                                     #");
  #endif
  Serial.println("##############################################################################");
  Serial.println("# Run the menu options sequentially                                          #");
@@ -32,7 +30,6 @@ char user_input()
  Serial.println("# 4. Calculate Sweat Concentration                                           #");
  Serial.println("##############################################################################");
  #ifdef DEBUG
- Serial.println("##############################################################################");
  Serial.println("# 5. Write to Register                                                       #");
  Serial.println("# 6. Read from Register                                                      #");
  Serial.println("# 7. Register Dump                                                           #");
@@ -44,12 +41,12 @@ char user_input()
  Serial.print("User selected option:   ");
  Serial.println(in_byte); 
   #ifdef DEBUG 
-    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'E'))||(((in_byte >= 'a')&&(in_byte >= 'e'))))
+    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'F'))||(((in_byte >= 'a')&&(in_byte >= 'f'))))
   #else
     if ((in_byte >= '0')&&(in_byte <= '4'))
   #endif
   {
-   #ifdef DEBUG
+   #ifdef DEBUG2
    Serial.println("Accepted user input");
    Serial.println("");
    #endif
@@ -93,7 +90,7 @@ void execute_user_function(char inByte)
        Serial.println("");
        Serial.println("");
         /* Calculate the gain factor for an impedance of 47kohms. */
-        #ifdef DEBUG2
+        #ifdef DEBUG
         Serial.print("Enter the Calibration resistance value: ");
         calib_impedance = read_number();
         Serial.println(calib_impedance);
@@ -311,6 +308,11 @@ void execute_user_function(char inByte)
        Serial.print(temperature);
        Serial.println(" C");
        Serial.println("");
+     break;
+     case'F':
+     case'f':
+       Serial.println("Incrementing the frequency. .");
+       AD5933_increment();
      break;
 #endif
    default: 
