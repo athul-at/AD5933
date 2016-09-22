@@ -36,10 +36,10 @@ void setup()
   AD5933_Reset();
   Serial.println("Reset completed. .");
   /* Select the source of the AD5933 system clock. */
-  AD5933_SetSystemClk(AD5933_CONTROL_EXT_SYSCLK, 16000000ul);
+  AD5933_SetSystemClk(AD5933_CONTROL_EXT_SYSCLK, 100000ul);
   Serial.println("Clock Setup completed");
   /* Set range and gain. */
-  AD5933_SetRangeAndGain(AD5933_RANGE_2000mVpp, AD5933_GAIN_X1);
+  AD5933_SetRangeAndGain(AD5933_RANGE_200mVpp, AD5933_GAIN_X1);
   Serial.println("Setting range and gain done. .");
   /* Read the temperature. */
   temperature = AD5933_GetTemperature();
@@ -48,10 +48,13 @@ void setup()
   Serial.print(temperature);
   Serial.println(" C");
   Serial.println("");
+  /* Configuring the settling cycles to 4 cycles*/
+  AD5933_settling_time(20,AD5933_SETTLE_4X);
+  Serial.println("Setting settling cycles to 80 done. .");
    /*Configure the sweep parameters */
-  AD5933_ConfigSweep(100,       // 100 Hz
-                       10,        // 10 Hz increments
-                       5);        // 5 increments
+  AD5933_ConfigSweep(90,       // 90 Hz
+                       1,        // 1 Hz increments
+                       20);        // 20 increments
   Serial.println("Setting the sweep settings completed. . ");
   Serial.println("");
   /* Starting frequency sweep*/

@@ -20,6 +20,7 @@ char user_input()
  Serial.println("# D. Configure Sweep                                                         #");
  Serial.println("# E. Get temperature ( Celsius )                                             #");
  Serial.println("# F. Increment frequency                                                     #");
+ Serial.println("# G. Set Settling time                                                       #");
  #endif
  Serial.println("##############################################################################");
  Serial.println("# Run the menu options sequentially                                          #");
@@ -41,7 +42,7 @@ char user_input()
  Serial.print("User selected option:   ");
  Serial.println(in_byte); 
   #ifdef DEBUG 
-    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'F'))||(((in_byte >= 'a')&&(in_byte >= 'f'))))
+    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'G'))||(((in_byte >= 'a')&&(in_byte >= 'g'))))
   #else
     if ((in_byte >= '0')&&(in_byte <= '4'))
   #endif
@@ -77,6 +78,8 @@ void execute_user_function(char inByte)
    unsigned long frequency_step = 0;
    unsigned short step_count = 0;
    unsigned long start_frequency =0 ;
+   unsigned long SettlingTime = 4;
+   unsigned int Multiplier = 1;
    #endif
  switch(inByte)
  {
@@ -313,6 +316,32 @@ void execute_user_function(char inByte)
      case'f':
        Serial.println("Incrementing the frequency. .");
        AD5933_increment();
+     break;
+     case'G':
+     case'g':
+     Serial.println("Set the settling cycles. .");
+     Serial.print("1. Enter the cycles (0-511): ");
+     SettlingTime = read_number();
+     Serial.println(SettlingTime);
+     Serial.print("2. Enter the multiplier: (1/2/4): ");
+     Multiplier = read_number();
+     Serial.println(Multiplier);
+     switch(Multiplier)
+     {
+      case 1:
+       AD5933_settling_time(SettlingTime,AD5933_SETTLE_1X);
+      break;
+      case 2:
+       AD5933_settling_time(SettlingTime,AD5933_SETTLE_2X);
+      break;
+      case 4:
+       AD5933_settling_time(SettlingTime,AD5933_SETTLE_4X);
+      break;
+      default:
+      Serial.println("Invalid multipler value: Setting muliplier to 1X");
+      AD5933_settling_time(SettlingTime,AD5933_SETTLE_1X);
+      break;
+     }
      break;
 #endif
    default: 

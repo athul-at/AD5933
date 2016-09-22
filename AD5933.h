@@ -55,7 +55,8 @@
 #define AD5933_REG_FREQ_START       0x82    // Start frequency
 #define AD5933_REG_FREQ_INC         0x85    // Frequency increment
 #define AD5933_REG_INC_NUM          0x88    // Number of increments
-#define AD5933_REG_SETTLING_CYCLES  0x8A    // Number of settling time cycles
+#define AD5933_REG_SETTLING_CYCLES  0x8B    // Number of settling time cycles
+#define AD5933_REG_SETTLING_MULTIPLIER 0x8A  // Settling time multiplier
 #define AD5933_REG_STATUS           0x8F    // Status
 #define AD5933_REG_TEMP_DATA        0x92    // Temperature data
 #define AD5933_REG_REAL_DATA        0x94    // Real data
@@ -65,6 +66,7 @@
 #define AD5933_CONTROL_FUNCTION(x)  ((x) << 4)     
 #define AD5933_CONTROL_RANGE(x)     ((x) << 1)
 #define AD5933_CONTROL_PGA_GAIN(x)  ((x) << 0)
+#define AD5933_SETTLING_TIME(x)     ((x) << 1)
 
 /* AD5933_REG_CONTROL_LB Bits */
 #define AD5933_CONTROL_RESET        (0x1 << 4)
@@ -107,6 +109,13 @@
 /* AD5933 Specifications */
 #define AD5933_INTERNAL_SYS_CLK     16000000ul      // 16MHz
 #define AD5933_MAX_INC_NUM          511             // Maximum increment number
+
+/* AD5933 Multiplier values */
+#define AD5933_SETTLE_1X 0x0
+#define AD5933_SETTLE_2X 0x1
+#define AD5933_SETTLE_4X 0x3
+
+
 
 /******************************************************************************/
 /************************ Functions Declarations ******************************/
@@ -164,6 +173,9 @@ void I2C_Read(unsigned char slave_adrs,
 void I2C_Write(unsigned char slave_adrs, 
                unsigned char reg_adrs,
                unsigned char data);
+
+/*! Sets the settling delay cycles (max = 2044) before each the ADC starts sampling after an increment/start sweep of repeat frequency command */
+void AD5933_settling_time(unsigned long settlingTime, unsigned char multiplier);
 
 /*! Reads the user input */
 char user_input();

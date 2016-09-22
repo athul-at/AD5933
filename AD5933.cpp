@@ -436,6 +436,32 @@ double AD5933_CalculateImpedance(double gainFactor,
 }
 
 /***************************************************************************//**
+ * @brief Sets the settling cycles before the ADC conversion starts
+ *
+ * @param settlingTime - number between 1 and 511
+ * @param multiplier -  AD5933_SETTLE_1X
+ *                      AD5933_SETTLE_2X
+ *                      AD5933_SETTLE_4X
+
+*******************************************************************************/
+void AD5933_settling_time(unsigned long settlingTime, unsigned char multiplier)
+{
+  byte bit_9 = (unsigned char)((settlingTime >> 8) & 0x01);
+  byte settling_count = (unsigned char)(settlingTime & 0xFF);
+  
+  AD5933_SetRegisterValue(AD5933_REG_SETTLING_MULTIPLIER,
+                            AD5933_SETTLING_TIME(multiplier)|(bit_9),
+                            1);
+  AD5933_SetRegisterValue(AD5933_REG_SETTLING_CYCLES,
+                            settling_count,
+                            1);
+  #ifdef DEBUG
+  Serial.print("BIT {11:10}: ");Serial.println(AD5933_SETTLING_TIME(multiplier));
+  Serial.print("BIT 9: ");Serial.println(bit_9); 
+  Serial.print("Lower Byte: ");Serial.println(settling_count);
+  #endif
+}
+/***************************************************************************//**
  * @brief Writes 1 byte of data to the slave dvice
  *
  * @param slave_adrs - The address of the slave device to be written.
