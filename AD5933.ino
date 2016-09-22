@@ -2,14 +2,20 @@
 // AD5933 I2C Interface Master device.
 // Author         : Athul Asokan Thulasi
 // Created on     : September 1, 2016
-// Last modified  : September 13, 2016
+// Last modified  : September 21, 2016
 
 #include <Wire.h>
 #include "AD5933.h" 
 #include <math.h>           
 
 
-
+# define RANGE AD5933_RANGE_200mVpp
+# define GAIN AD5933_GAIN_X1
+ unsigned int increment_number = 20;
+ unsigned int start_freq = 90;
+ unsigned int freq_step = 1;
+extern double impedance_phase;
+ 
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
 /******************************************************************************/
@@ -52,9 +58,9 @@ void setup()
   AD5933_settling_time(20,AD5933_SETTLE_4X);
   Serial.println("Setting settling cycles to 80 done. .");
    /*Configure the sweep parameters */
-  AD5933_ConfigSweep(90,       // 90 Hz
-                       1,        // 1 Hz increments
-                       20);        // 20 increments
+  AD5933_ConfigSweep(start_freq,       // 90 Hz
+                       freq_step,        // 1 Hz increments
+                       increment_number);        // 20 increments
   Serial.println("Setting the sweep settings completed. . ");
   Serial.println("");
   /* Starting frequency sweep*/
@@ -70,5 +76,21 @@ void loop()
    execute_user_function(usr_sel);
 }
 
+
+/*! Plot the impedance spectrum in the frequency range configured by the config Sweep function */
+void Plot_impedance_spectrum()
+{
+ Serial.println("Sl No., Frequency, Impedance (Ohms), Phase (degrees)");
+  for(int i = 0; i<increment_number; i++)
+  {
+    impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_INC_FREQ);
+    baseline_impedance = impedance;
+    Serial.print(start_freq + freq_step*i);
+    Serial.print(",");
+    Serial.print(baseline_impedance);
+    Serial.print(",");
+    Serial.println(impedance_phase);
+  }
+}
 
 

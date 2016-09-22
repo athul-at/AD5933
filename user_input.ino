@@ -21,6 +21,7 @@ char user_input()
  Serial.println("# E. Get temperature ( Celsius )                                             #");
  Serial.println("# F. Increment frequency                                                     #");
  Serial.println("# G. Set Settling time                                                       #");
+ Serial.println("# H. Plot Impedance Spectrum                                                 #");
  #endif
  Serial.println("##############################################################################");
  Serial.println("# Run the menu options sequentially                                          #");
@@ -42,7 +43,7 @@ char user_input()
  Serial.print("User selected option:   ");
  Serial.println(in_byte); 
   #ifdef DEBUG 
-    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'G'))||(((in_byte >= 'a')&&(in_byte >= 'g'))))
+    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'H'))||(((in_byte >= 'a')&&(in_byte >= 'h'))))
   #else
     if ((in_byte >= '0')&&(in_byte <= '4'))
   #endif
@@ -342,6 +343,11 @@ void execute_user_function(char inByte)
       AD5933_settling_time(SettlingTime,AD5933_SETTLE_1X);
       break;
      }
+     break;
+     case 'H':
+     case 'h':
+     Serial.println("Genetaring the Impedance Spectrum. .");
+     Plot_impedance_spectrum();
      break;
 #endif
    default: 

@@ -195,4 +195,7 @@ unsigned long read_number();
 /*! Convert radians to degree */
 double rad2degree(signed short R, signed short I);
 
+/*! Plot the impedance spectrum in the frequency range configured by the config Sweep function */
+void Plot_impedance_spectrum();
+
 #endif	/* __AD5933_H__ */

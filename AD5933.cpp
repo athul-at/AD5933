@@ -435,6 +435,7 @@ double AD5933_CalculateImpedance(double gainFactor,
     return impedance;    
 }
 
+
 /***************************************************************************//**
  * @brief Sets the settling cycles before the ADC conversion starts
  *
