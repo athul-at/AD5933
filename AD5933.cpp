@@ -49,6 +49,7 @@
  * 4) Added set the settling cycles function and required changes
  * 5) Modified the calibrationa and impedance calculation functions to improve numerical precision.
  * 6) Added power down and standby functions
+ * 7) Added two point calibration function.
  */
 
 
@@ -416,6 +417,46 @@ double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,
     return gainFactor;
 }
 
+
+/***************************************************************************//**
+ * @brief: Two point calibration function that generates the calibration gain factor at the start and end of the frequency sweep 
+ *  It can be used to approximate the gain factor at any intermediate frequency by linear interpolation.
+ *  Returns the change in gain factor for the frequency increment step configured by the configure frequency seep function. 
+ *  Eg: double AD5933_Calibration_change(unsigned long start_frequency,unsigned long frequency_step_size, unsigned short frequency_step_count, unsigned long calibrationImpedance, unsigned char freqFunction);
+ */
+double AD5933_Calibration_change(unsigned long start_frequency,unsigned long frequency_step_size, unsigned short frequency_step_count, unsigned long calibrationImpedance, unsigned char freqFunction)
+{
+  double gain_change = 0.0;
+  double init_gain = 0.0;
+  double final_gain =0.0;
+  unsigned long stop_frequency = start_frequency + (frequency_step_count*frequency_step_size);
+  #ifdef DEBUG
+  Serial.print("Start frequency: ");
+  Serial.println(start_frequency);
+  Serial.print("Stop frequency: ");
+  Serial.println(stop_frequency);
+  #endif
+  AD5933_ConfigSweep(start_frequency,frequency_step_size,1);
+  init_gain = AD5933_CalculateGainFactor(calibrationImpedance,freqFunction);
+  #ifdef DEBUG
+  Serial.print("Initial Gain calculated: ");
+  Serial.println(init_gain);
+  #endif
+  AD5933_ConfigSweep(stop_frequency,frequency_step_size,1);
+  final_gain = AD5933_CalculateGainFactor(calibrationImpedance,freqFunction);
+  #ifdef DEBUG
+  Serial.print("Final Gain calculated: ");
+  Serial.println(final_gain);
+  #endif
+  AD5933_ConfigSweep(start_frequency,frequency_step_size,frequency_step_count);
+  gain_change = (final_gain - init_gain)/(frequency_step_count*1.0);
+  #ifdef DEBUG
+  Serial.print("Gain chage per frequency step: ");
+  Serial.println(gain_change);
+  Serial.println("");
+  #endif
+  return gain_change;
+}
 /***************************************************************************//**
  * @brief Reads the real and the imaginary data and calculates the Impedance.
  *

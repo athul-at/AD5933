@@ -177,6 +177,8 @@ void I2C_Write(unsigned char slave_adrs,
 /*! Sets the settling delay cycles (max = 2044) before each the ADC starts sampling after an increment/start sweep of repeat frequency command */
 void AD5933_settling_time(unsigned long settlingTime, unsigned char multiplier);
 
+/*! Function that returns the change in calibration factor for the given change in the frequency */
+double AD5933_Calibration_change(unsigned long start_frequency,unsigned long frequency_step_size, unsigned short frequency_step_count, unsigned long calibrationImpedance, unsigned char freqFunction);
 
 /*! Convert radians to degree */
 double rad2degree(signed short R, signed short I);

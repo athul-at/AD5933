@@ -7,6 +7,11 @@
 #include "AD5933.h" 
 #include <math.h>           
 
+
+extern unsigned long freq_step;
+extern unsigned long start_freq ;
+extern unsigned short increment_number;
+   
 char user_input()
 {
  start_menu:
@@ -23,6 +28,7 @@ char user_input()
  Serial.println("# H. Plot Impedance Spectrum                                                 #");
  Serial.println("# I. Set AD5933 to powerdown mode                                            #");
  Serial.println("# J. Set AD5933 to standby mode                                              #");
+ Serial.println("# K. Two point calibration                                                   #");
  #endif
  Serial.println("##############################################################################");
  Serial.println("# Run the menu options sequentially                                          #");
@@ -44,7 +50,7 @@ char user_input()
  Serial.print("User selected option:   ");
  Serial.println(in_byte); 
   #ifdef DEBUG 
-    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'J'))||(((in_byte >= 'a')&&(in_byte >= 'j'))))
+    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'K'))||(((in_byte >= 'a')&&(in_byte >= 'k'))))
   #else
     if ((in_byte >= '0')&&(in_byte <= '4'))
   #endif
@@ -72,14 +78,12 @@ void execute_user_function(char inByte)
    byte index;
    char adrs_buf[2];
    char data_buf[2];
-   unsigned long calib_impedance = 9970; //9.97K Ohm
+   unsigned long calib_impedance = 79400; //79.4K Ohm
+
    #ifdef DEBUG
    char input;
    char in_byte;
    unsigned long frequency =0;
-   unsigned long frequency_step = 0;
-   unsigned short step_count = 0;
-   unsigned long start_frequency =0 ;
    unsigned long SettlingTime = 4;
    unsigned int Multiplier = 1;
    #endif
@@ -242,15 +246,15 @@ void execute_user_function(char inByte)
      case'd':
       Serial.println("##############################################################################");
       Serial.print("1. Enter the start frequency: ");
-      start_frequency = read_number();
-      Serial.println(start_frequency);
+      start_freq = read_number();
+      Serial.println(start_freq);
       Serial.print("2. Enter the frequency step size: ");
-      frequency_step = read_number();
-      Serial.println(frequency_step);
+      freq_step = read_number();
+      Serial.println(freq_step);
       Serial.print("3. Enter the number of steps: ");
-      step_count = (unsigned short)read_number();
-      Serial.println(step_count);
-      AD5933_ConfigSweep(start_frequency,frequency_step,step_count);
+      increment_number = (unsigned short)read_number();
+      Serial.println(increment_number);
+      AD5933_ConfigSweep(start_freq,freq_step,increment_number);
       Serial.println(" Sweep setup completed");
       Serial.println("##############################################################################"); 
      break;
@@ -360,6 +364,15 @@ void execute_user_function(char inByte)
      Serial.println("Setting the AD5933 to standby mode. .");
      AD5933_standby();
      break; 
+     case 'K':
+     case 'k':
+     Serial.println("Starting two point calibration. .");
+     Serial.println(start_freq);
+     Serial.println(freq_step);
+     Serial.println(increment_number);
+     Serial.println(calib_impedance);
+     gain_delta_change = AD5933_Calibration_change(start_freq,freq_step,increment_number,calib_impedance,AD5933_FUNCTION_REPEAT_FREQ); 
+     break;
 #endif
    default: 
       Serial.println("Invalid Option !!");

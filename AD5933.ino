@@ -10,10 +10,10 @@
 
 # define RANGE AD5933_RANGE_200mVpp
 # define GAIN AD5933_GAIN_X1
- unsigned int increment_number = 20;
- unsigned int start_freq = 90;
- unsigned int freq_step = 1;
- double impedance_phase;
+unsigned short increment_number = 20;
+unsigned long start_freq = 90;
+unsigned long freq_step = 1;
+double impedance_phase;
  
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
@@ -22,6 +22,7 @@ unsigned short  temperature = 0;
 double          impedanceK  = 0.0;
 double          impedance   = 0.0;
 double          gainFactor  = 1.0;
+double          gain_delta_change = 0.0;
 double          baseline_impedance = 0.0;
 double          sweat_impedance = 0.0;
 double          delta_impedance = 0.0;
@@ -44,7 +45,7 @@ void setup()
   AD5933_SetSystemClk(AD5933_CONTROL_EXT_SYSCLK, 100000ul);
   Serial.println("Clock Setup completed");
   /* Set range and gain. */
-  AD5933_SetRangeAndGain(AD5933_RANGE_200mVpp, AD5933_GAIN_X1);
+  AD5933_SetRangeAndGain(RANGE,GAIN);
   Serial.println("Setting range and gain done. .");
   /* Read the temperature. */
   temperature = AD5933_GetTemperature();
