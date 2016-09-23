@@ -2,7 +2,7 @@
 // AD5933 I2C Interface Master device.
 // Author         : Athul Asokan Thulasi
 // Created on     : September 1, 2016
-// Last modified  : September 13, 2016
+// Last modified  : September 21, 2016
 
 #include <Wire.h>
 #include "AD5933.h" 
@@ -13,7 +13,8 @@
  unsigned int increment_number = 20;
  unsigned int start_freq = 90;
  unsigned int freq_step = 1;
-
+ double impedance_phase;
+ 
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
 /******************************************************************************/
@@ -38,7 +39,7 @@ void setup()
   byte index;
   char adrs_buf[2];
   char data_buf[2];
-  unsigned long calib_impedance = 9970; //9.97K Ohm  
+  unsigned long calib_impedance = 75400; //75.4K Ohm  
   double system_phase = 0.0;
   double impedance_phase = 0.0;          
   Serial.begin(9600); 
@@ -51,7 +52,7 @@ void setup()
   AD5933_Reset();
   Serial.println("Reset completed. .");
   /* Select the source of the AD5933 system clock. */
-  AD5933_SetSystemClk(AD5933_CONTROL_INT_SYSCLK, 1000000ul);
+  AD5933_SetSystemClk(AD5933_CONTROL_EXT_SYSCLK, 100000ul);
   Serial.println("Clock Setup completed");
   /* Set range and gain. */
   AD5933_SetRangeAndGain(RANGE,GAIN);
@@ -63,11 +64,13 @@ void setup()
   Serial.print(temperature);
   Serial.println(" C");
   Serial.println("");
-
+  /* Configuring the settling cycles to 4 cycles*/
+  AD5933_settling_time(20,AD5933_SETTLE_4X);
+  Serial.println("Setting settling cycles to 80 done. .");
    /*Configure the sweep parameters */
-  AD5933_ConfigSweep(start_freq,       // 10 KHz
-                       freq_step,        // 1 KHz increments
-                       increment_number);        // 500 increments
+  AD5933_ConfigSweep(start_freq,       // 90 Hz
+                       freq_step,        // 1 Hz increments
+                       increment_number);        // 20 increments
   Serial.println("Setting the sweep settings completed. . ");
   Serial.println("");
   /* Starting frequency sweep*/
@@ -134,7 +137,7 @@ void setup()
     Serial.print(",");
     Serial.println(impedance_phase);
   }
-                  
+  AD5933_power_down();                
 }
 
 // Loop routine runs over and over again forever

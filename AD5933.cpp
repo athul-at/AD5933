@@ -2,6 +2,7 @@
  *   @file   AD5933.c
  *   @brief  Implementation of AD5933 Driver.
  *   @author DBogdan (dragos.bogdan@analog.com)
+ *   @author2 Athul Asokan Thulasi (athul.asokanthulasi@utdallas.edu)
 ********************************************************************************
  * Copyright 2012(c) Analog Devices, Inc.
  *
@@ -41,10 +42,13 @@
 *******************************************************************************/
 
 /*
- * Modifications :
+ * Modifications by Athul Asokan Thulasi:
  * 1) Removed the Communcation.c file and included Arduino based IIC Read and Write Functions
  * 2) Modified the setRegster and GetRegister functions
  * 3) Modified file type to C++
+ * 4) Added set the settling cycles function and required changes
+ * 5) Modified the calibrationa and impedance calculation functions to improve numerical precision.
+ * 6) Added power down and standby functions
  */
 
 
@@ -68,7 +72,7 @@ unsigned char currentClockSource = AD5933_CONTROL_INT_SYSCLK;
 unsigned char currentGain        = AD5933_GAIN_X1;
 unsigned char currentRange       = AD5933_RANGE_2000mVpp;
 double system_phase = 0.0;
-double impedance_phase = 0.0;
+extern double impedance_phase;
 
 /******************************************************************************/
 /************************ Functions Definitions *******************************/
@@ -137,6 +141,38 @@ unsigned long AD5933_GetRegisterValue(unsigned char registerAddress,
 }
 
 /***************************************************************************//**
+ * @brief Writes 1 byte of data to the slave dvice
+ *
+ * @param slave_adrs - The address of the slave device to be written.
+ * @param reg_address - The register address in the slave device that needs to be written
+ * @param data - The data byte that needs to be written in the reg_address of the slave device.                     
+ * Eg: I2C_Write(AD5933_ADDRESS, writeData, 2, 1);
+*******************************************************************************/
+void I2C_Write(unsigned char slave_adrs, unsigned char reg_adrs,unsigned char data)
+{
+  Wire.beginTransmission(slave_adrs);                 
+  //Wire.write(slave_adrs);
+  Wire.write(reg_adrs);
+  Wire.write(data);
+  Wire.endTransmission();      // stop transmitting
+  delay(500);
+}
+
+/***************************************************************************//**
+ * @brief Writes 1 byte of data to the slave device
+ *
+ * @param slave_adrs - The address of the slave device to be read.
+ * @param dataBuffer - The pointer to the location where data byte needs to stored.  
+ * Eg: I2C_Read(AD5933_ADDRESS, readData);
+*******************************************************************************/
+void I2C_Read(unsigned char slave_adrs,unsigned char* dataBuffer)
+{                
+  Wire.requestFrom(slave_adrs,uint8_t(1));
+  while(Wire.available()<1);
+  *dataBuffer = Wire.read(); 
+}
+
+/***************************************************************************//**
  * @brief Resets the device.
  *
  * @return None.
@@ -179,7 +215,6 @@ void AD5933_SetSystemClk(char clkSource, unsigned long extClkFreq)
  *                Example: AD5933_RANGE_2000mVpp
  *                         AD5933_RANGE_200mVpp
  *                         AD5933_RANGE_400mVpp
-
  *                         AD5933_RANGE_1000mVpp
  * @param gain - Gain option.
  *               Example: AD5933_GAIN_X5
@@ -302,11 +337,7 @@ void AD5933_StartSweep(void)
                        AD5933_CONTROL_RANGE(currentRange) | 
                        AD5933_CONTROL_PGA_GAIN(currentGain),
                        1);
-    /*AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
-                       AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_REPEAT_FREQ) | 
-                       AD5933_CONTROL_RANGE(currentRange) | 
-                       AD5933_CONTROL_PGA_GAIN(currentGain),
-                       1);*/ /* ADDED BY ATHUL*/
+                       
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
                        AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_START_SWEEP) | 
                        AD5933_CONTROL_RANGE(currentRange) | 
@@ -319,6 +350,19 @@ void AD5933_StartSweep(void)
     };
 }
 
+/***************************************************************************//**
+ * @brief Incremants the frequency as set by the config sweep function
+ *
+ * @return None.
+*******************************************************************************/
+void AD5933_increment(void)
+{
+   AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
+                       AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_INC_FREQ) | 
+                       AD5933_CONTROL_RANGE(currentRange) | 
+                       AD5933_CONTROL_PGA_GAIN(currentGain),
+                       1);
+}
 /***************************************************************************//**
  * @brief Reads the real and the imaginary data and calculates the Gain Factor.
  *
@@ -356,9 +400,11 @@ double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,
     R2 = pow(realData,2);
     I2 =pow(imagData,2);
     magnitude = R2 + I2;
+    Serial.print("R2 + I2: ");Serial.println(magnitude);
     magnitude = sqrt(magnitude);
-    gainFactor = (1.0 / (magnitude * calibrationImpedance*1.0))*10000000;
-    #ifdef DEBUG2
+    Serial.print("sqrt(magnitude): ");Serial.println(magnitude);
+    gainFactor = (1.0 / (magnitude * calibrationImpedance*1.0))*1000000000;
+    #ifdef DEBUG
      Serial.print("R: ");Serial.print(realData);Serial.print(" R(HEX): 0x");Serial.println(realData,HEX);
      Serial.print("I: ");Serial.print(imagData);Serial.print(" I(HEX): 0x");Serial.println(imagData,HEX);
      Serial.print("R^2 :");Serial.println(R2);
@@ -408,9 +454,11 @@ double AD5933_CalculateImpedance(double gainFactor,
     R2 = pow(realData,2);
     I2 =pow(imagData,2);
     magnitude = R2 + I2;
+    Serial.print("R2 + I2: ");Serial.println(magnitude);
     magnitude = sqrt(magnitude);
-    impedance = 10000000.0 *(1.0 / (magnitude * gainFactor*1.0L)); 
-    #ifdef DEBUG2
+    Serial.print("sqrt(magnitude): ");Serial.println(magnitude);
+    impedance = 1000000000.0 *(1.0 / (magnitude * gainFactor*1.0L)); 
+    #ifdef DEBUG
      Serial.print("R: ");Serial.print(realData);Serial.print(" R(HEX): 0x");Serial.println(realData,HEX);
      Serial.print("I: ");Serial.print(imagData);Serial.print(" I(HEX): 0x");Serial.println(imagData,HEX);
      Serial.print("R^2 :");Serial.println(R2);
@@ -422,39 +470,64 @@ double AD5933_CalculateImpedance(double gainFactor,
     return impedance;    
 }
 
+
 /***************************************************************************//**
- * @brief Writes 1 byte of data to the slave dvice
+ * @brief Sets the settling cycles before the ADC conversion starts
  *
- * @param slave_adrs - The address of the slave device to be written.
- * @param reg_address - The register address in the slave device that needs to be written
- * @param data - The data byte that needs to be written in the reg_address of the slave device.                     
- * Eg: I2C_Write(AD5933_ADDRESS, writeData, 2, 1);
+ * @param settlingTime - number between 1 and 511
+ * @param multiplier -  AD5933_SETTLE_1X
+ *                      AD5933_SETTLE_2X
+ *                      AD5933_SETTLE_4X
+
 *******************************************************************************/
-void I2C_Write(unsigned char slave_adrs, unsigned char reg_adrs,unsigned char data)
+void AD5933_settling_time(unsigned long settlingTime, unsigned char multiplier)
 {
-  Wire.beginTransmission(slave_adrs);                 
-  //Wire.write(slave_adrs);
-  Wire.write(reg_adrs);
-  Wire.write(data);
-  Wire.endTransmission();      // stop transmitting
-  delay(500);
+  byte bit_9 = (unsigned char)((settlingTime >> 8) & 0x01);
+  byte settling_count = (unsigned char)(settlingTime & 0xFF);
+  
+  AD5933_SetRegisterValue(AD5933_REG_SETTLING_MULTIPLIER,
+                            AD5933_SETTLING_TIME(multiplier)|(bit_9),
+                            1);
+  AD5933_SetRegisterValue(AD5933_REG_SETTLING_CYCLES,
+                            settling_count,
+                            1);
+  #ifdef DEBUG
+  Serial.print("BIT {11:10}: ");Serial.println(AD5933_SETTLING_TIME(multiplier));
+  Serial.print("BIT 9: ");Serial.println(bit_9); 
+  Serial.print("Lower Byte: ");Serial.println(settling_count);
+  #endif
+}
+
+
+/***************************************************************************//**
+ * @brief Sets the AD5933 in powerdown mode
+ * Eg; AD5933_power_down();
+ * In power down mode VIN and VOUT pins are internally connected to ground and the device in low power mode
+ * 
+*******************************************************************************/
+void AD5933_power_down()
+{
+  AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
+                            AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_POWER_DOWN) | 
+                            AD5933_CONTROL_RANGE(currentRange) | 
+                            AD5933_CONTROL_PGA_GAIN(currentGain),
+                            1);
 }
 
 /***************************************************************************//**
- * @brief Writes 1 byte of data to the slave device
- *
- * @param slave_adrs - The address of the slave device to be read.
- * @param dataBuffer - The pointer to the location where data byte needs to stored.  
- * Eg: I2C_Read(AD5933_ADDRESS, readData);
+ * @brief Sets the AD5933 in standby mode
+ * Eg; AD5933_standby();
+ * In standby mode VIN and VOUT pins are internally connected to ground but the rest of the device is functional
+ * 
 *******************************************************************************/
-void I2C_Read(unsigned char slave_adrs,unsigned char* dataBuffer)
-{                
-  Wire.requestFrom(slave_adrs,uint8_t(1));
-  while(Wire.available()<1);
-  *dataBuffer = Wire.read(); 
+void AD5933_standby()
+{
+  AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
+                            AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_STANDBY) | 
+                            AD5933_CONTROL_RANGE(currentRange) | 
+                            AD5933_CONTROL_PGA_GAIN(currentGain),
+                            1);
 }
-
-
 
 /***************************************************************************//**
  * @brief Converts radians to degree
@@ -479,30 +552,7 @@ double rad2degree(signed short R, signed short I)
   return phase_degree;
 }
 
-
-/***************************************************************************//**
- * @brief - Function that calculates the sweat glucose concentration from the change in impedance.
-  Rewrite this function with a look up table or a poylnomial fit (which ever is better)
- ********************************************************************************/
-double calculate_concentration(double delta_impedance)
-{
-  return 31.7 + 2.55* log(delta_impedance-0.01); // Natural Log
-}
-
-/*****************************************************************************
- * @brief  Function that reads a number from serial port
- * 
-********************************************************************************/
-
-unsigned long read_number()
-{
-      unsigned long num = 0;
-      while(Serial.available() == 0);
-      while(Serial.available() > 0)
-       {
-        num = num*10 + Serial.parseInt();
-       }
-      return num;
-}
-
 /*************************************************************************************/
+
+
+

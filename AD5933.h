@@ -42,7 +42,8 @@
 #ifndef __AD5933_H__
 #define __AD5933_H__
 
-/*! #define DEBUG2*/
+# define DEBUG 1
+//# define DEBUG2 1
 
 /******************************************************************************/
 /************************** AD5933 Definitions ********************************/
@@ -54,7 +55,8 @@
 #define AD5933_REG_FREQ_START       0x82    // Start frequency
 #define AD5933_REG_FREQ_INC         0x85    // Frequency increment
 #define AD5933_REG_INC_NUM          0x88    // Number of increments
-#define AD5933_REG_SETTLING_CYCLES  0x8A    // Number of settling time cycles
+#define AD5933_REG_SETTLING_CYCLES  0x8B    // Number of settling time cycles
+#define AD5933_REG_SETTLING_MULTIPLIER 0x8A  // Settling time multiplier
 #define AD5933_REG_STATUS           0x8F    // Status
 #define AD5933_REG_TEMP_DATA        0x92    // Temperature data
 #define AD5933_REG_REAL_DATA        0x94    // Real data
@@ -64,6 +66,7 @@
 #define AD5933_CONTROL_FUNCTION(x)  ((x) << 4)     
 #define AD5933_CONTROL_RANGE(x)     ((x) << 1)
 #define AD5933_CONTROL_PGA_GAIN(x)  ((x) << 0)
+#define AD5933_SETTLING_TIME(x)     ((x) << 1)
 
 /* AD5933_REG_CONTROL_LB Bits */
 #define AD5933_CONTROL_RESET        (0x1 << 4)
@@ -107,6 +110,13 @@
 #define AD5933_INTERNAL_SYS_CLK     16000000ul      // 16MHz
 #define AD5933_MAX_INC_NUM          511             // Maximum increment number
 
+/* AD5933 Multiplier values */
+#define AD5933_SETTLE_1X 0x0
+#define AD5933_SETTLE_2X 0x1
+#define AD5933_SETTLE_4X 0x3
+
+
+
 /******************************************************************************/
 /************************ Functions Declarations ******************************/
 /******************************************************************************/
@@ -143,6 +153,9 @@ void AD5933_ConfigSweep(unsigned long  startFreq,
 /*! Starts the sweep operation. */
 void AD5933_StartSweep(void);
 
+/*! Increments the frequency as set bt the ConfigSweep. */
+void AD5933_increment(void);
+
 /*! Reads the real and the imaginary data and calculates the Gain Factor. */
 double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,
                                   unsigned char freqFunction);
@@ -161,13 +174,35 @@ void I2C_Write(unsigned char slave_adrs,
                unsigned char reg_adrs,
                unsigned char data);
 
+/*! Sets the settling delay cycles (max = 2044) before each the ADC starts sampling after an increment/start sweep of repeat frequency command */
+void AD5933_settling_time(unsigned long settlingTime, unsigned char multiplier);
+
+
+/*! Convert radians to degree */
+double rad2degree(signed short R, signed short I);
+
+/*! Sets the AD5933 in standby mode */
+void AD5933_standby();
+
+/*! Sets the AD5933 in powerdown mode */
+void AD5933_power_down();
+
+/*! Reads the user input */
+char user_input();
+
+/*! Execute the functions specified by user the user input */
+void execute_user_function(char inByte);
+
 /*! Function to calculate the sweat glucose concentration from the impedance difference */
 double calculate_concentration(double delta_impedance);
+
+/*! Function that converts a serial input 2 characters to a single hexadecimal number */ 
+unsigned long char2hex(char buf[]);
 
 /*! Function that reads a number from serial port*/
 unsigned long read_number();
 
-/*! Convert radians to degree */
-double rad2degree(signed short R, signed short I);
+/*! Plot the impedance spectrum in the frequency range configured by the config Sweep function */
+void Plot_impedance_spectrum();
 
 #endif	/* __AD5933_H__ */
