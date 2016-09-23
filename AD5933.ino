@@ -1,4 +1,3 @@
-
 // AD5933 I2C Interface Master device.
 // Author         : Athul Asokan Thulasi
 // Created on     : September 1, 2016
@@ -14,7 +13,7 @@
  unsigned int increment_number = 20;
  unsigned int start_freq = 90;
  unsigned int freq_step = 1;
-extern double impedance_phase;
+ double impedance_phase;
  
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
@@ -81,10 +80,12 @@ void loop()
 void Plot_impedance_spectrum()
 {
  Serial.println("Sl No., Frequency, Impedance (Ohms), Phase (degrees)");
-  for(int i = 0; i<increment_number; i++)
+  for(int i = 0; i<=increment_number; i++)
   {
     impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_INC_FREQ);
     baseline_impedance = impedance;
+    Serial.print(i);
+    Serial.print(",");
     Serial.print(start_freq + freq_step*i);
     Serial.print(",");
     Serial.print(baseline_impedance);
@@ -92,5 +93,6 @@ void Plot_impedance_spectrum()
     Serial.println(impedance_phase);
   }
 }
+
 
 

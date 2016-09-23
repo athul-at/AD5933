@@ -177,6 +177,16 @@ void I2C_Write(unsigned char slave_adrs,
 /*! Sets the settling delay cycles (max = 2044) before each the ADC starts sampling after an increment/start sweep of repeat frequency command */
 void AD5933_settling_time(unsigned long settlingTime, unsigned char multiplier);
 
+
+/*! Convert radians to degree */
+double rad2degree(signed short R, signed short I);
+
+/*! Sets the AD5933 in standby mode */
+void AD5933_standby();
+
+/*! Sets the AD5933 in powerdown mode */
+void AD5933_power_down();
+
 /*! Reads the user input */
 char user_input();
 
@@ -191,9 +201,6 @@ unsigned long char2hex(char buf[]);
 
 /*! Function that reads a number from serial port*/
 unsigned long read_number();
-
-/*! Convert radians to degree */
-double rad2degree(signed short R, signed short I);
 
 /*! Plot the impedance spectrum in the frequency range configured by the config Sweep function */
 void Plot_impedance_spectrum();

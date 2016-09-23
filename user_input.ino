@@ -1,8 +1,7 @@
-
 // AD5933 I2C Interface Master device.
 // Author         : Athul Asokan Thulasi
 // Created on     : September 1, 2016
-// Last modified  : September 13, 2016
+// Last modified  : September 23, 2016
 
 #include <Wire.h>
 #include "AD5933.h" 
@@ -22,6 +21,8 @@ char user_input()
  Serial.println("# F. Increment frequency                                                     #");
  Serial.println("# G. Set Settling time                                                       #");
  Serial.println("# H. Plot Impedance Spectrum                                                 #");
+ Serial.println("# I. Set AD5933 to powerdown mode                                            #");
+ Serial.println("# J. Set AD5933 to standby mode                                              #");
  #endif
  Serial.println("##############################################################################");
  Serial.println("# Run the menu options sequentially                                          #");
@@ -43,7 +44,7 @@ char user_input()
  Serial.print("User selected option:   ");
  Serial.println(in_byte); 
   #ifdef DEBUG 
-    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'H'))||(((in_byte >= 'a')&&(in_byte >= 'h'))))
+    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'J'))||(((in_byte >= 'a')&&(in_byte >= 'j'))))
   #else
     if ((in_byte >= '0')&&(in_byte <= '4'))
   #endif
@@ -349,6 +350,16 @@ void execute_user_function(char inByte)
      Serial.println("Genetaring the Impedance Spectrum. .");
      Plot_impedance_spectrum();
      break;
+     case 'I':
+     case 'i':
+     Serial.println("Setting the AD5933 to power down. .");
+     AD5933_power_down();
+     break;
+     case 'J':
+     case 'j':
+     Serial.println("Setting the AD5933 to standby mode. .");
+     AD5933_standby();
+     break; 
 #endif
    default: 
       Serial.println("Invalid Option !!");
