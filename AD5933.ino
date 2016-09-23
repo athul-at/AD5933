@@ -8,11 +8,11 @@
 #include "AD5933.h" 
 #include <math.h>           
 
-# define RANGE AD5933_RANGE_2000mVpp
+# define RANGE AD5933_RANGE_200mVpp
 # define GAIN AD5933_GAIN_X1
- unsigned int increment_number = 10;
- unsigned int start_freq = 10000;
- unsigned int freq_step = 1000;
+ unsigned int increment_number = 20;
+ unsigned int start_freq = 90;
+ unsigned int freq_step = 1;
 
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
