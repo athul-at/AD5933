@@ -430,25 +430,22 @@ double AD5933_Calibration_change(unsigned long start_frequency,unsigned long fre
   double init_gain = 0.0;
   double final_gain =0.0;
   unsigned long stop_frequency = start_frequency + (frequency_step_count*frequency_step_size);
-  #ifdef DEBUG
-  Serial.print("Start frequency: ");
-  Serial.println(start_frequency);
-  Serial.print("Stop frequency: ");
-  Serial.println(stop_frequency);
-  #endif
   AD5933_ConfigSweep(start_frequency,frequency_step_size,1);
+  AD5933_StartSweep();
   init_gain = AD5933_CalculateGainFactor(calibrationImpedance,freqFunction);
   #ifdef DEBUG
   Serial.print("Initial Gain calculated: ");
   Serial.println(init_gain);
   #endif
   AD5933_ConfigSweep(stop_frequency,frequency_step_size,1);
+  AD5933_StartSweep();
   final_gain = AD5933_CalculateGainFactor(calibrationImpedance,freqFunction);
   #ifdef DEBUG
   Serial.print("Final Gain calculated: ");
   Serial.println(final_gain);
   #endif
   AD5933_ConfigSweep(start_frequency,frequency_step_size,frequency_step_count);
+  AD5933_StartSweep();
   gain_change = (final_gain - init_gain)/(frequency_step_count*1.0);
   #ifdef DEBUG
   Serial.print("Gain chage per frequency step: ");
