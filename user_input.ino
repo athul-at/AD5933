@@ -352,6 +352,7 @@ void execute_user_function(char inByte)
      case 'H':
      case 'h':
      Serial.println("Genetaring the Impedance Spectrum. .");
+     AD5933_StartSweep();
      Plot_impedance_spectrum();
      break;
      case 'I':

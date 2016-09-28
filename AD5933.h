@@ -181,7 +181,7 @@ void AD5933_settling_time(unsigned long settlingTime, unsigned char multiplier);
 double AD5933_Calibration_change(unsigned long start_frequency,unsigned long frequency_step_size, unsigned short frequency_step_count, unsigned long calibrationImpedance, unsigned char freqFunction);
 
 /*! Convert radians to degree */
-double rad2degree(signed short R, signed short I);
+double rad2degree(double R, double I);
 
 /*! Sets the AD5933 in standby mode */
 void AD5933_standby();

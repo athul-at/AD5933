@@ -11,8 +11,8 @@
 # define RANGE AD5933_RANGE_200mVpp
 # define GAIN AD5933_GAIN_X1
 unsigned short increment_number = 20;
-unsigned long start_freq = 90;
-unsigned long freq_step = 1;
+unsigned long start_freq = 100;
+unsigned long freq_step = 0;
 double impedance_phase;
  
 /******************************************************************************/
@@ -27,6 +27,8 @@ double          baseline_impedance = 0.0;
 double          sweat_impedance = 0.0;
 double          delta_impedance = 0.0;
 double          glucose_concentration = 0.0;
+extern signed short GrealData;
+extern signed short GimagData;
 /******************************************************************************/
 
 // Setup routine runs once when you press reset:
@@ -80,7 +82,7 @@ void loop()
 /*! Plot the impedance spectrum in the frequency range configured by the config Sweep function */
 void Plot_impedance_spectrum()
 {
- Serial.println("Sl No., Frequency, Impedance (Ohms), Phase (degrees)");
+ Serial.println("Sl No., Frequency, Impedance (Ohms), Phase (degrees),R,I");
   for(int i = 0; i<=increment_number; i++)
   {
     impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_INC_FREQ);
@@ -91,7 +93,11 @@ void Plot_impedance_spectrum()
     Serial.print(",");
     Serial.print(baseline_impedance);
     Serial.print(",");
-    Serial.println(impedance_phase);
+    Serial.print(impedance_phase);
+    Serial.print(",");
+    Serial.print(GrealData);
+    Serial.print(",");
+    Serial.println(GimagData);
   }
 }
 
