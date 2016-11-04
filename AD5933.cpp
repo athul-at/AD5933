@@ -73,11 +73,7 @@ unsigned char currentClockSource = AD5933_CONTROL_INT_SYSCLK;
 unsigned char currentGain        = AD5933_GAIN_X1;
 unsigned char currentRange       = AD5933_RANGE_2000mVpp;
 double system_phase = 0.0;
-double system_phase2 = 0.0;
-double sysR_realComp =0;
-double sysR_imagComp =0;
 extern double impedance_phase;
-extern double impedance_phase2;
 signed short GrealData = 0;
 signed short GimagData = 0;
 
