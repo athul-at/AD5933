@@ -44,6 +44,8 @@
 
 # define DEBUG 1
 //# define DEBUG2 1
+#define DEBUG3 1
+//#define DEBUG4 1
 
 /******************************************************************************/
 /************************** AD5933 Definitions ********************************/
@@ -177,9 +179,12 @@ void I2C_Write(unsigned char slave_adrs,
 /*! Sets the settling delay cycles (max = 2044) before each the ADC starts sampling after an increment/start sweep of repeat frequency command */
 void AD5933_settling_time(unsigned long settlingTime, unsigned char multiplier);
 
+/*! Function that returns the change in calibration factor for the given change in the frequency */
+double AD5933_Calibration_change(unsigned long start_frequency,unsigned long frequency_step_size, unsigned short frequency_step_count, unsigned long calibrationImpedance, unsigned char freqFunction);
 
-/*! Convert radians to degree */
-double rad2degree(signed short R, signed short I);
+/*! Calculate phase in radians / degree */
+double phase_in_degrees(double R, double I);
+double phase_in_radians(double R, double I);
 
 /*! Sets the AD5933 in standby mode */
 void AD5933_standby();
@@ -204,5 +209,8 @@ unsigned long read_number();
 
 /*! Plot the impedance spectrum in the frequency range configured by the config Sweep function */
 void Plot_impedance_spectrum();
+
+/*! Plot the impedance at a given frequncy varying settling time*/
+void Plot_impedance_settlingtime(unsigned long freq, unsigned long settling_start, unsigned settling_step_size);
 
 #endif	/* __AD5933_H__ */

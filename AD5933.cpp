@@ -1,5 +1,5 @@
 /***************************************************************************//**
- *   @file   AD5933.c
+ *   @file   AD5933.cpp
  *   @brief  Implementation of AD5933 Driver.
  *   @author DBogdan (dragos.bogdan@analog.com)
  *   @author2 Athul Asokan Thulasi (athul.asokanthulasi@utdallas.edu)
@@ -49,6 +49,7 @@
  * 4) Added set the settling cycles function and required changes
  * 5) Modified the calibrationa and impedance calculation functions to improve numerical precision.
  * 6) Added power down and standby functions
+ * 7) Added two point calibration function.
  */
 
 
@@ -73,6 +74,8 @@ unsigned char currentGain        = AD5933_GAIN_X1;
 unsigned char currentRange       = AD5933_RANGE_2000mVpp;
 double system_phase = 0.0;
 extern double impedance_phase;
+signed short GrealData = 0;
+signed short GimagData = 0;
 
 /******************************************************************************/
 /************************ Functions Definitions *******************************/
@@ -298,12 +301,10 @@ void AD5933_ConfigSweep(unsigned long  startFreq,
     }
     
     /* Convert users start frequency to binary code. */
-    startFreqReg = (unsigned long)((double)startFreq * 4 / currentSysClk *
-                                   POW_2_27);
+    startFreqReg = (unsigned long)((double)startFreq * 4 / currentSysClk *POW_2_27);
    
     /* Convert users increment frequency to binary code. */
-    incFreqReg = (unsigned long)((double)incFreq * 4 / currentSysClk * 
-                                 POW_2_27);
+    incFreqReg = (unsigned long)((double)incFreq * 4 / currentSysClk * POW_2_27);
     
     /* Configure the device with the sweep parameters. */
     AD5933_SetRegisterValue(AD5933_REG_FREQ_START,
@@ -382,8 +383,8 @@ double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,
     signed short  imagData   = 0;
     unsigned long int R2 = 0L;
     unsigned long int I2 = 0L;
-    unsigned char status     = 0;
-    
+    unsigned char status = 0;
+    double phase_angle_rad = 0.0;
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
                             AD5933_CONTROL_FUNCTION(freqFunction) |
                             AD5933_CONTROL_RANGE(currentRange) | 
@@ -396,22 +397,31 @@ double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,
     }
     realData = AD5933_GetRegisterValue(AD5933_REG_REAL_DATA,2);
     imagData = AD5933_GetRegisterValue(AD5933_REG_IMAG_DATA,2);
-    system_phase = rad2degree(realData,imagData);
     R2 = pow(realData,2);
-    I2 =pow(imagData,2);
+    I2 = pow(imagData,2);
     magnitude = R2 + I2;
-    Serial.print("R2 + I2: ");Serial.println(magnitude);
-    magnitude = sqrt(magnitude);
-    Serial.print("sqrt(magnitude): ");Serial.println(magnitude);
-    gainFactor = (1.0 / (magnitude * calibrationImpedance*1.0))*1000000000;
-    #ifdef DEBUG
+    #ifdef DEBUG3
+     Serial.println("Calculating gain factor magnitude");
      Serial.print("R: ");Serial.print(realData);Serial.print(" R(HEX): 0x");Serial.println(realData,HEX);
      Serial.print("I: ");Serial.print(imagData);Serial.print(" I(HEX): 0x");Serial.println(imagData,HEX);
-     Serial.print("R^2 :");Serial.println(R2);
-     Serial.print("I^2 :");Serial.println(I2);
-     Serial.print("Magnitude: ");Serial.println(magnitude);
-     Serial.print("Gain Factor: ");Serial.println(gainFactor);
-     Serial.print("System Phase: ");Serial.println(system_phase);
+     Serial.print("R^2: ");Serial.println(R2);
+     Serial.print("I^2: ");Serial.println(I2);
+     Serial.print("R^2 + I^2: ");Serial.println(magnitude);
+    #endif
+     magnitude = sqrt(magnitude);
+     gainFactor = (1.0 / (magnitude * calibrationImpedance*1.0))*1000000000;
+    #ifdef DEBUG3
+    Serial.print("sqrt(R^2 + I^2): ");Serial.println(magnitude);
+    Serial.print("Gain Factor*10^9: ");Serial.println(gainFactor);
+    #endif
+   //Phase measurement method 1 - in standard degrees 
+    system_phase = phase_in_degrees((double)realData,(double)imagData);
+    phase_angle_rad = phase_in_radians((double)realData,(double)imagData);
+    #ifdef DEBUG3 
+     Serial.println("");
+     Serial.println("Calculating the system phase");
+     Serial.print("System Phase (degrees): ");Serial.println(system_phase);
+     Serial.print("System Phase (radians): ");Serial.println(phase_angle_rad);
     #endif
     return gainFactor;
 }
@@ -435,8 +445,7 @@ double AD5933_CalculateImpedance(double gainFactor,
     double        impedance = 0;
     unsigned long int R2 = 0L;
     unsigned long int I2 = 0L;
-    unsigned char status    = 0;
-    
+    unsigned char status    = 0;    
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
                             AD5933_CONTROL_FUNCTION(freqFunction) | 
                             AD5933_CONTROL_RANGE(currentRange) | 
@@ -449,27 +458,80 @@ double AD5933_CalculateImpedance(double gainFactor,
     }
     realData = AD5933_GetRegisterValue(AD5933_REG_REAL_DATA,2);
     imagData = AD5933_GetRegisterValue(AD5933_REG_IMAG_DATA,2);
-    //magnitude = sqrt((realData * realData*1.0L) + (imagData * imagData*1.0L));
-    impedance_phase = rad2degree(realData,imagData)- system_phase;
+    GrealData = realData;
+    GimagData = imagData;
     R2 = pow(realData,2);
     I2 =pow(imagData,2);
     magnitude = R2 + I2;
-    Serial.print("R2 + I2: ");Serial.println(magnitude);
+    #ifdef DEBUG4
+    Serial.println(" ");
+    Serial.println(" ");
+    Serial.println("Calculating the Impedance magnitude");
+    Serial.print("R: ");Serial.print(realData);Serial.print(" R(HEX): 0x");Serial.println(realData,HEX);
+    Serial.print("I: ");Serial.print(imagData);Serial.print(" I(HEX): 0x");Serial.println(imagData,HEX);
+    Serial.print("R^2 :");Serial.println(R2);
+    Serial.print("I^2 :");Serial.println(I2);
+    Serial.print("R^2 + I^2: ");Serial.println(magnitude);
+    #endif
     magnitude = sqrt(magnitude);
-    Serial.print("sqrt(magnitude): ");Serial.println(magnitude);
     impedance = 1000000000.0 *(1.0 / (magnitude * gainFactor*1.0L)); 
-    #ifdef DEBUG
-     Serial.print("R: ");Serial.print(realData);Serial.print(" R(HEX): 0x");Serial.println(realData,HEX);
-     Serial.print("I: ");Serial.print(imagData);Serial.print(" I(HEX): 0x");Serial.println(imagData,HEX);
-     Serial.print("R^2 :");Serial.println(R2);
-     Serial.print("I^2 :");Serial.println(I2);
-     Serial.print("Magnitude: ");Serial.println(magnitude);
-     Serial.print("Impedance: ");Serial.println(impedance);
-     Serial.print("Phase: ");Serial.println(impedance_phase);
+    #ifdef DEBUG4
+    Serial.print("sqrt(R^2 + I^2): ");Serial.println(magnitude);
+    Serial.print("Impedance: ");Serial.println(impedance);
+    #endif
+
+ // Calculating the phase
+    // Method 1 : Standard phase in degrees - standard phase in degrees of the system
+    impedance_phase = phase_in_degrees((double)realData,(double)imagData);
+    #ifdef DEBUG4
+    Serial.println(" ");
+    Serial.println("Calculating the phase");
+    Serial.print("System Phase(degrees): ");Serial.println(impedance_phase);
+    #endif
+    impedance_phase = impedance_phase - system_phase;
+    #ifdef DEBUG4
+    Serial.print("Phase due to added impedance(degrees): ");Serial.println(impedance_phase);
+    Serial.println(" ");
     #endif
     return impedance;    
 }
 
+/***************************************************************************//**
+ * @brief: Two point calibration function that generates the calibration gain factor at the start and end of the frequency sweep 
+ *  It can be used to approximate the gain factor at any intermediate frequency by linear interpolation.
+ *  Returns the change in gain factor for the frequency increment step configured by the configure frequency seep function. 
+ *  Eg: double AD5933_Calibration_change(unsigned long start_frequency,unsigned long frequency_step_size, unsigned short frequency_step_count, unsigned long calibrationImpedance, unsigned char freqFunction);
+ */
+double AD5933_Calibration_change(unsigned long start_frequency,unsigned long frequency_step_size, unsigned short frequency_step_count, unsigned long calibrationImpedance, unsigned char freqFunction)
+{
+  double gain_change = 0.0;
+  double init_gain = 0.0;
+  double final_gain =0.0;
+  unsigned long stop_frequency = start_frequency + (frequency_step_count*frequency_step_size);
+  AD5933_ConfigSweep(start_frequency,frequency_step_size,0);
+  AD5933_StartSweep();
+  init_gain = AD5933_CalculateGainFactor(calibrationImpedance,freqFunction);
+  #ifdef DEBUG
+  Serial.print("Initial Gain calculated: ");
+  Serial.println(init_gain);
+  #endif
+  AD5933_ConfigSweep(stop_frequency,frequency_step_size,0);
+  AD5933_StartSweep();
+  final_gain = AD5933_CalculateGainFactor(calibrationImpedance,freqFunction);
+  #ifdef DEBUG
+  Serial.print("Final Gain calculated: ");
+  Serial.println(final_gain);
+  #endif
+  AD5933_ConfigSweep(start_frequency,frequency_step_size,frequency_step_count);
+  AD5933_StartSweep();
+  gain_change = (final_gain - init_gain)/(frequency_step_count*1.0);
+  #ifdef DEBUG
+  Serial.print("Gain chage per frequency step: ");
+  Serial.println(gain_change);
+  Serial.println("");
+  #endif
+  return gain_change;
+}
 
 /***************************************************************************//**
  * @brief Sets the settling cycles before the ADC conversion starts
@@ -491,8 +553,8 @@ void AD5933_settling_time(unsigned long settlingTime, unsigned char multiplier)
   AD5933_SetRegisterValue(AD5933_REG_SETTLING_CYCLES,
                             settling_count,
                             1);
-  #ifdef DEBUG
-  Serial.print("BIT {11:10}: ");Serial.println(AD5933_SETTLING_TIME(multiplier));
+  #ifdef DEBUG2
+  Serial.print("BIT {11:10:9}: ");Serial.println(AD5933_SETTLING_TIME(multiplier));
   Serial.print("BIT 9: ");Serial.println(bit_9); 
   Serial.print("Lower Byte: ");Serial.println(settling_count);
   #endif
@@ -530,28 +592,47 @@ void AD5933_standby()
 }
 
 /***************************************************************************//**
- * @brief Converts radians to degree
- * Eg; double degrees = rad2degree(signed short Real_part, signed short Imaginary_part)
+ * @brief Calculate the phase in degrees / radians
+ * Eg; double degrees = phase_in_degrees(signed short Real_part, signed short Imaginary_part)
 
 *******************************************************************************/
-double rad2degree(signed short R, signed short I)
+double phase_in_degrees(double R, double I)
 {
   double phase_degree =0.0;
+  double ratio = (I*1.0)/(R*1.0);
   if((R >=0)&&(I>=0))  // I st Quadrant
   {
-    phase_degree = (atan2((I*1.0),(R*1.0))*180)/PI;
+    phase_degree = (atan(ratio)*180)/PI;
   }
   else if ((R >=0)&&(I<=0)) // IV rd Quadrant
   {
-    phase_degree = 360+ ((atan2((I*1.0),(R*1.0))*180)/PI);
+    phase_degree = 360+ ((atan(ratio)*180)/PI);
   }
   else  // IInd or IIIrd Quadrant
   {
-     phase_degree = 180+((atan2((I*1.0),(R*1.0))*180)/PI);
+     phase_degree = 180+((atan(ratio)*180)/PI);
   }
   return phase_degree;
 }
 
+double phase_in_radians(double R, double I)
+{
+  double phase_rad =0.0;
+  double ratio = (I*1.0)/(R*1.0);
+  if((R >=0)&&(I>=0))  // I st Quadrant
+  {
+    phase_rad = atan(ratio);
+  }
+  else if ((R >=0)&&(I<=0)) // IV rd Quadrant
+  {
+    phase_rad = ((2.0*PI) + atan(ratio));
+  }
+  else  // IInd or IIIrd Quadrant
+  {
+     phase_rad = PI+(atan(ratio));
+  }
+  return phase_rad;
+}
 /*************************************************************************************/
 
 
