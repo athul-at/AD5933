@@ -29,6 +29,7 @@ char user_input()
  Serial.println("# I. Set AD5933 to powerdown mode                                            #");
  Serial.println("# J. Set AD5933 to standby mode                                              #");
  Serial.println("# K. Two point calibration                                                   #");
+ Serial.println("# L. Impedance vs settling cycles                                            #");
  #endif
  Serial.println("##############################################################################");
  Serial.println("# Run the menu options sequentially                                          #");
@@ -50,7 +51,7 @@ char user_input()
  Serial.print("User selected option:   ");
  Serial.println(in_byte); 
   #ifdef DEBUG 
-    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'K'))||(((in_byte >= 'a')&&(in_byte >= 'k'))))
+    if (((in_byte >= '0')&&(in_byte <= '7'))||((in_byte >= 'A')&&(in_byte <= 'L'))||(((in_byte >= 'a')&&(in_byte >= 'l'))))
   #else
     if ((in_byte >= '0')&&(in_byte <= '4'))
   #endif
@@ -86,6 +87,8 @@ void execute_user_function(char inByte)
    unsigned long frequency =0;
    unsigned long SettlingTime = 4;
    unsigned int Multiplier = 1;
+   unsigned long settle_start = 20;
+   unsigned settle_step_size = 10;
    #endif
  switch(inByte)
  {
@@ -115,8 +118,8 @@ void execute_user_function(char inByte)
        Serial.println("");
        Serial.println("");
        impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_REPEAT_FREQ);
-       impedanceK = (unsigned long)impedance;
-       impedanceK /= 1000;
+       //impedanceK = (unsigned long)impedance;
+       //impedanceK /= 1000;
        baseline_impedance = impedance;
        Serial.print("Baseline Impedance (Ohms): ");
        Serial.println(baseline_impedance);
@@ -129,8 +132,8 @@ void execute_user_function(char inByte)
       Serial.println("");
       impedance = 0.0 ;
       impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_REPEAT_FREQ);
-      impedanceK = (unsigned long)impedance;
-      impedanceK /= 1000;
+      //impedanceK = (unsigned long)impedance;
+      //impedanceK /= 1000;
       sweat_impedance = impedance;
       Serial.print("Impedance with sweat sample (Ohms): ");
       Serial.println(sweat_impedance);
@@ -373,6 +376,19 @@ void execute_user_function(char inByte)
      Serial.println(increment_number);
      Serial.println(calib_impedance);
      gain_delta_change = AD5933_Calibration_change(start_freq,freq_step,increment_number,calib_impedance,AD5933_FUNCTION_REPEAT_FREQ); 
+     break;
+     case 'L':
+     case 'l':
+      Serial.print("Enter the frequency (Fo): ");
+      start_freq = read_number();
+      Serial.println(start_freq);
+      Serial.print("2. Enter the starting Settling cycle: ");
+      settle_start = read_number();
+      Serial.println(settle_start);
+      Serial.print("3. Enter the settling steps size: ");
+      settle_step_size = (unsigned)read_number();
+      Serial.println(settle_step_size);
+      Plot_impedance_settlingtime(start_freq,settle_start,settle_step_size);
      break;
 #endif
    default: 
