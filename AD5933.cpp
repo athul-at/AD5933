@@ -447,14 +447,8 @@ double AD5933_CalculateImpedance(double gainFactor,
     unsigned long int I2 = 0L;
     unsigned char status    = 0;
     //Phase calculation values
-    double real_comp = 0.0;
-    double delta_real_comp =0.0;
-    double imag_comp = 0.0;
-    double delta_imag_comp =0.0;
-    double angle_ratio = 0.0;
-    double delta_angle_ratio =0.0;
     double phase_angle_rad =0.0;
-    double impedance_sys_phase =0.0;
+ 
     
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
                             AD5933_CONTROL_FUNCTION(freqFunction) | 
