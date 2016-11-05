@@ -6,6 +6,12 @@
 #include <Wire.h>
 #include "AD5933.h" 
 #include <math.h>           
+/******************************************************************************/
+/*****************  Defining the PIN locations         ************************/
+/******************************************************************************/
+ #define AMUX_ADRS0 3
+ #define AMUX_ADRS1 4 
+ #define AMUX_EN 5
 
 /******************************************************************************/
 /*****************  EIS system configuration settings  ************************/
@@ -18,7 +24,8 @@
 unsigned long   start_freq                 = 100;
 unsigned long   freq_step                  = 0;
 unsigned short  increment_number           = 20;
-unsigned long   settling_cycles            = 100;
+// Actual settling cycle count = settling_cycles * SETTLE_MULTIPLIER
+unsigned long   settling_cycles            = 100;   
 unsigned long   external_clock_freq        = 100000;
 
 /******************************************************************************/
@@ -51,13 +58,21 @@ unsigned long read_number()
 // Setup routine runs once when you press reset
 void setup() 
 {  
+  pinMode(AMUX_EN,OUTPUT);
+  pinMode(AMUX_ADRS0,OUTPUT);
+  pinMode(AMUX_ADRS1,OUTPUT);
+  digitalWrite(AMUX_EN,HIGH);
+  //Selecting the AMUX channel S2 (calibartaion resistance)
+  digitalWrite(AMUX_ADRS0,HIGH);
+  digitalWrite(AMUX_ADRS1,LOW);
+  
   unsigned char in_address = 0;;
   unsigned long  in_data = 0;
   unsigned long read_value = 0;
   byte index;
   char adrs_buf[2];
   char data_buf[2];
-  unsigned long calib_impedance = 75400; //75.4K Ohm  
+  unsigned long calib_impedance = 18000; //18K Ohm  
   double system_phase = 0.0;
   double impedance_phase = 0.0;          
   Serial.begin(9600); 
