@@ -5,7 +5,20 @@
 
 #include <Wire.h>
 #include "AD5933.h" 
-#include <math.h>           
+#include <math.h>   
+//#include <Arduino.h>
+//#include <stdint.h>
+#include "Linduino.h"
+#include "LT_I2C.h"
+#include "LTC6904.h"
+#include <Wire.h>
+
+// Function Declaration 
+void LTC_setclock();
+
+
+// Global variables
+static uint8_t output_config = LTC6904_CLK_ON_CLK_INV_OFF;  //!< Keeps track of output configuration of LTC Clock .        
 /******************************************************************************/
 /*****************  Defining the PIN locations         ************************/
 /******************************************************************************/
@@ -58,6 +71,11 @@ unsigned long read_number()
 // Setup routine runs once when you press reset
 void setup() 
 {  
+  Serial.begin(9600); 
+  Serial.println("##############################################################################");
+  Serial.println("#                Sweat Glucose Measurement Program                           #");
+  Serial.println("##############################################################################");
+  Serial.println("");
   pinMode(AMUX_EN,OUTPUT);
   pinMode(AMUX_ADRS0,OUTPUT);
   pinMode(AMUX_ADRS1,OUTPUT);
@@ -75,12 +93,9 @@ void setup()
   unsigned long calib_impedance = 18000; //18K Ohm  
   double system_phase = 0.0;
   double impedance_phase = 0.0;          
-  Serial.begin(9600); 
-  Serial.println("##############################################################################");
-  Serial.println("#                Sweat Glucose Measurement Program                           #");
-  Serial.println("##############################################################################");
-  Serial.println("");
   Wire.begin(); 
+    /* Set the clock frequecny in LTC6904 clock source */
+  LTC_setclock();
  /* Reset the device. */
   AD5933_Reset();
   Serial.println("Reset completed. .");
@@ -104,6 +119,7 @@ void setup()
   Serial.println("");
   /* Starting frequency sweep*/
   AD5933_StartSweep();
+  Serial.println("7");
   Serial.print("Enter the Calibration resistance value: ");
   calib_impedance = read_number();
   Serial.println(calib_impedance);
@@ -189,5 +205,14 @@ void loop()
 {
 }
 
+void LTC_setclock()
+{
+  float freq = (float)external_clock_freq;
+  uint16_t clock_code;
+  uint8_t ack;
+  quikeval_I2C_connect();
+  clock_code = LTC6904_frequency_to_code(freq/1000000, output_config);
+  ack = LTC6904_write(LTC6904_ADDRESS, (uint16_t)clock_code);
+}
 
 

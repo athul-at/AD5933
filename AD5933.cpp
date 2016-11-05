@@ -325,30 +325,37 @@ void AD5933_ConfigSweep(unsigned long  startFreq,
 *******************************************************************************/
 void AD5933_StartSweep(void)
 {
+    Serial.println("0");
     unsigned char status = 0;
-    
+    Serial.println("1");
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
                             AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_STANDBY) |
                             AD5933_CONTROL_RANGE(currentRange) | 
                             AD5933_CONTROL_PGA_GAIN(currentGain),
                             1);
+    Serial.println("2");                        
     AD5933_Reset();
+    Serial.println("3");
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
                        AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_INIT_START_FREQ)|
                        AD5933_CONTROL_RANGE(currentRange) | 
                        AD5933_CONTROL_PGA_GAIN(currentGain),
                        1);
-                       
+    Serial.println("4");  
     AD5933_SetRegisterValue(AD5933_REG_CONTROL_HB,
                        AD5933_CONTROL_FUNCTION(AD5933_FUNCTION_START_SWEEP) | 
                        AD5933_CONTROL_RANGE(currentRange) | 
                        AD5933_CONTROL_PGA_GAIN(currentGain),
                        1);
+    Serial.println("5");
     status = 0;
     while((status & AD5933_STAT_DATA_VALID) == 0)
     {
         status = AD5933_GetRegisterValue(AD5933_REG_STATUS,1);
+        delay(500);
+        Serial.println(status);
     };
+    Serial.println("6");
 }
 
 /***************************************************************************//**
