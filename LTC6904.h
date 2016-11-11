@@ -64,8 +64,8 @@ ongoing work.
 
 // LT6904 address options
 // Uncomment the desired address
-#define LTC6904_ADDRESS 0x17     //!< ADR 0
-//#define LTC6904_ADDRESS 0x16     //!< ADR 1
+//#define LTC6904_ADDRESS 0x17     //!< ADR 0
+#define LTC6904_ADDRESS 0x16     //!< ADR 1
 
 /*!
 @{ 

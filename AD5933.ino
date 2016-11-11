@@ -22,15 +22,15 @@ static uint8_t output_config = LTC6904_CLK_ON_CLK_INV_OFF;  //!< Keeps track of 
 /******************************************************************************/
 /*****************  Defining the PIN locations         ************************/
 /******************************************************************************/
- #define AMUX_ADRS0 3
- #define AMUX_ADRS1 4 
- #define AMUX_EN 5
+ #define AMUX_ADRS0 2 //31  //2
+ #define AMUX_ADRS1 3 //33  //3
+ #define AMUX_EN 4  //35     //4
 
 /******************************************************************************/
 /*****************  EIS system configuration settings  ************************/
 /******************************************************************************/
  
-# define RANGE  AD5933_RANGE_200mVpp
+# define RANGE  AD5933_RANGE_400mVpp
 # define GAIN   AD5933_GAIN_X1
 # define SETLE_MULTIPLIER AD5933_SETTLE_4X
 
@@ -40,7 +40,7 @@ unsigned short  increment_number           = 20;
 // Actual settling cycle count = settling_cycles * SETTLE_MULTIPLIER
 unsigned long   settling_cycles            = 100;   
 unsigned long   external_clock_freq        = 100000;
-
+unsigned long calib_impedance = 18000; //18K Ohm 
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
 /******************************************************************************/
@@ -68,6 +68,39 @@ unsigned long read_number()
       return num;
 }
 
+/******************************************************************************/
+/*! Function that selects the channel of the mux*/
+void set_mux( int channel)
+{
+  if(channel == 0) // POT_CHANNEL
+  {
+  digitalWrite(AMUX_EN,HIGH);
+  digitalWrite(AMUX_ADRS0,LOW);
+  digitalWrite(AMUX_ADRS1,LOW); 
+  }
+  else if(channel == 1) // CALIB_CHANNEL1
+  {
+  digitalWrite(AMUX_EN,HIGH);
+  digitalWrite(AMUX_ADRS0,HIGH);
+  digitalWrite(AMUX_ADRS1,LOW);
+  }
+  else if (channel == 2) // CLIB_CHANNEL2
+  {
+  digitalWrite(AMUX_EN,HIGH);
+  digitalWrite(AMUX_ADRS0,LOW);
+  digitalWrite(AMUX_ADRS1,HIGH);
+  }
+  else if ( channel == 3) //IMPEDANCE_CHANNEL
+  {
+  digitalWrite(AMUX_EN,HIGH);
+  digitalWrite(AMUX_ADRS0,HIGH);
+  digitalWrite(AMUX_ADRS1,HIGH);
+  }
+  else
+  {
+    Serial.println("Invalid mux channel: 0-3 are valid options"); 
+  }
+}
 // Setup routine runs once when you press reset
 void setup() 
 {  
@@ -79,18 +112,26 @@ void setup()
   pinMode(AMUX_EN,OUTPUT);
   pinMode(AMUX_ADRS0,OUTPUT);
   pinMode(AMUX_ADRS1,OUTPUT);
-  digitalWrite(AMUX_EN,HIGH);
-  //Selecting the AMUX channel S2 (calibartaion resistance)
-  digitalWrite(AMUX_ADRS0,HIGH);
-  digitalWrite(AMUX_ADRS1,LOW);
-  
+  //Enabling the MUX
+//    Serial.println(" Enter any key to continue..");
+//  while(Serial.available() == 0);
+//  while(Serial.available() >0)
+//  {
+//      Serial.read();
+//  }
+    set_mux(1);
+    Serial.println(" Enter any key to continue..");
+  while(Serial.available() == 0);
+  while(Serial.available() >0)
+  {
+      Serial.read();
+  }
   unsigned char in_address = 0;;
   unsigned long  in_data = 0;
   unsigned long read_value = 0;
   byte index;
   char adrs_buf[2];
-  char data_buf[2];
-  unsigned long calib_impedance = 18000; //18K Ohm  
+  char data_buf[2]; 
   double system_phase = 0.0;
   double impedance_phase = 0.0;          
   Wire.begin(); 
@@ -119,13 +160,19 @@ void setup()
   Serial.println("");
   /* Starting frequency sweep*/
   AD5933_StartSweep();
-  Serial.println("7");
-  Serial.print("Enter the Calibration resistance value: ");
-  calib_impedance = read_number();
+      Serial.println(" Enter any key to continue..");
+  while(Serial.available() == 0);
+  while(Serial.available() >0)
+  {
+      Serial.read();
+  }
+  Serial.print("Calibration resistance value: ");
+  //calib_impedance = read_number();
   Serial.println(calib_impedance);
   gainFactor = AD5933_CalculateGainFactor(calib_impedance,AD5933_FUNCTION_REPEAT_FREQ);
   Serial.print("Calculated Calibration Gain: ");
   Serial.println(gainFactor);
+  set_mux(3);  // Impedance channel
   Serial.println("Measuring baseline impedance. . .");
   Serial.println(" Enter any key to continue..");
   while(Serial.available() == 0);
@@ -214,5 +261,6 @@ void LTC_setclock()
   clock_code = LTC6904_frequency_to_code(freq/1000000, output_config);
   ack = LTC6904_write(LTC6904_ADDRESS, (uint16_t)clock_code);
 }
+
 
 
