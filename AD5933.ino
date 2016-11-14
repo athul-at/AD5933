@@ -131,9 +131,7 @@ void setup()
   unsigned long read_value = 0;
   byte index;
   char adrs_buf[2];
-  char data_buf[2]; 
-  double system_phase = 0.0;
-  double impedance_phase = 0.0;          
+  char data_buf[2];          
   Wire.begin(); 
     /* Set the clock frequecny in LTC6904 clock source */
   LTC_setclock();
