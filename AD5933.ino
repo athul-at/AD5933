@@ -36,7 +36,7 @@ static uint8_t output_config = LTC6904_CLK_ON_CLK_INV_OFF;  //!< Keeps track of 
 
 unsigned long   start_freq                 = 100;
 unsigned long   freq_step                  = 0;
-unsigned short  increment_number           = 20;
+unsigned short  increment_number           = 50;
 // Actual settling cycle count = settling_cycles * SETTLE_MULTIPLIER
 unsigned long   settling_cycles            = 100;   
 unsigned long   external_clock_freq        = 100000;
@@ -181,7 +181,7 @@ void setup()
   Serial.println("");
   Serial.println("");
  Serial.println("Sl No., Time, Frequency, Baseline Impedance(Ohms), Phase(degrees),R,I");
-  for(int i = 0; i<=increment_number; i++)
+  for(int i = 1; i<=increment_number; i++)
   {
     impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_INC_FREQ);
     baseline_impedance = impedance;
@@ -198,6 +198,11 @@ void setup()
     Serial.print(GrealData);
     Serial.print(",");
     Serial.println(GimagData);
+    if(i==1)
+    {
+        /* Configuring the settling cycles */
+      AD5933_settling_time(0,SETLE_MULTIPLIER); //Reducing it for a fast measurement
+    }
   }
   Serial.println("");
   Serial.println("");
@@ -225,7 +230,7 @@ void setup()
   Serial.println("");
   Serial.println("");
  Serial.println("Sl No., Time, Frequency, Impedance(Ohms), Phase(degrees),R,I");
-  for(int i = 0; i<increment_number; i++)
+  for(int i = 1; i<=increment_number; i++)
   {
     impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_INC_FREQ);
     Serial.print(i);
@@ -241,6 +246,11 @@ void setup()
     Serial.print(GrealData);
     Serial.print(",");
     Serial.println(GimagData);
+    if(i==1)
+    {
+        /* Configuring the settling cycles */
+      AD5933_settling_time(0,SETLE_MULTIPLIER); //Reducing it for a fast measurement
+    }
   }
   AD5933_power_down();                
 }
@@ -256,7 +266,11 @@ void LTC_setclock()
   uint16_t clock_code;
   uint8_t ack;
   quikeval_I2C_connect();
-  clock_code = LTC6904_frequency_to_code(freq/1000000, output_config);
+  clock_code = LTC6904_frequency_to_code((freq/1000000)+0.00072, output_config); // 0.72 is error in generation
+  //clock_code = LTC6904_frequency_to_code((freq/1000000), output_config);
+  Serial.print("Set LTC clock frequency: ");
+  Serial.print((freq/1000));
+  Serial.println(" KHz");
   ack = LTC6904_write(LTC6904_ADDRESS, (uint16_t)clock_code);
 }
 
