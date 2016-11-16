@@ -22,11 +22,14 @@ static uint8_t output_config = LTC6904_CLK_ON_CLK_INV_OFF;  //!< Keeps track of 
 /******************************************************************************/
 /*****************  Defining the PIN locations         ************************/
 /******************************************************************************/
- #define AMUX_ADRS0 2 //31  //2
- #define AMUX_ADRS1 3 //33  //3
- #define AMUX_EN 4  //35     //4
+ #define AMUX_ADRS0 2 
+ #define AMUX_ADRS1 3 
+ #define AMUX_EN 4  
 
-/******************************************************************************/
+ #define AMUX2_ADRS0 30 
+ #define AMUX2_ADRS1 32 
+ #define AMUX2_EN 31  
+ /******************************************************************************/
 /*****************  EIS system configuration settings  ************************/
 /******************************************************************************/
  
@@ -101,6 +104,40 @@ void set_mux( int channel)
     Serial.println("Invalid mux channel: 0-3 are valid options"); 
   }
 }
+
+/******************************************************************************/
+/*! Function that selects the channel of the mux (SELECT GAMRY OR CIMD)*/
+void set_mux2( int channel)
+{
+  if(channel == 0) // GAMRY CHANEL
+  {
+  digitalWrite(AMUX2_EN,HIGH);
+  digitalWrite(AMUX2_ADRS0,LOW);
+  digitalWrite(AMUX2_ADRS1,LOW); 
+  }
+  else if(channel == 1) // CIMD CHANNEL
+  {
+  digitalWrite(AMUX2_EN,HIGH);
+  digitalWrite(AMUX2_ADRS0,HIGH);
+  digitalWrite(AMUX2_ADRS1,LOW);
+  }
+  else if (channel == 2) // NOT CONNECTED
+  {
+  digitalWrite(AMUX2_EN,HIGH);
+  digitalWrite(AMUX2_ADRS0,LOW);
+  digitalWrite(AMUX2_ADRS1,HIGH);
+  }
+  else if ( channel == 3) //NC
+  {
+  digitalWrite(AMUX2_EN,HIGH);
+  digitalWrite(AMUX2_ADRS0,HIGH);
+  digitalWrite(AMUX2_ADRS1,HIGH);
+  }
+  else
+  {
+    Serial.println("Invalid mux channel: 0-3 are valid options"); 
+  }
+}
 // Setup routine runs once when you press reset
 void setup() 
 {  
@@ -112,6 +149,9 @@ void setup()
   pinMode(AMUX_EN,OUTPUT);
   pinMode(AMUX_ADRS0,OUTPUT);
   pinMode(AMUX_ADRS1,OUTPUT);
+  pinMode(AMUX2_EN,OUTPUT);
+  pinMode(AMUX2_ADRS0,OUTPUT);
+  pinMode(AMUX2_ADRS1,OUTPUT);
   //Enabling the MUX
 //    Serial.println(" Enter any key to continue..");
 //  while(Serial.available() == 0);
@@ -120,6 +160,7 @@ void setup()
 //      Serial.read();
 //  }
     set_mux(1);
+    set_mux2(1);
     Serial.println(" Enter any key to continue..");
   while(Serial.available() == 0);
   while(Serial.available() >0)
@@ -180,9 +221,15 @@ void setup()
   }
   Serial.println("");
   Serial.println("");
- Serial.println("Sl No., Time, Frequency, Baseline Impedance(Ohms), Phase(degrees),R,I");
+ Serial.println("Sl No., Time, Frequency, Baseline Impedance(Ohms), Phase(degrees),R,I,MUX_CH");
+ int mux2_ch = 1;
   for(int i = 1; i<=increment_number; i++)
   {
+    if((i%3)== 0)
+    {
+      mux2_ch = !mux2_ch;
+      set_mux(mux2_ch);
+    }
     impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_INC_FREQ);
     baseline_impedance = impedance;
     Serial.print(i);
@@ -197,7 +244,9 @@ void setup()
     Serial.print(",");
     Serial.print(GrealData);
     Serial.print(",");
-    Serial.println(GimagData);
+    Serial.print(GimagData);
+    Serial.print(",");
+    Serial.println(mux2_ch);
     if(i==1)
     {
         /* Configuring the settling cycles */
@@ -229,9 +278,15 @@ void setup()
   }  
   Serial.println("");
   Serial.println("");
- Serial.println("Sl No., Time, Frequency, Impedance(Ohms), Phase(degrees),R,I");
+ Serial.println("Sl No., Time, Frequency, Impedance(Ohms), Phase(degrees),R,I,MUX_CH");
+  mux2_ch = 1;
   for(int i = 1; i<=increment_number; i++)
   {
+    if((i%3)== 0)
+    {
+      mux2_ch = !mux2_ch;
+      set_mux(mux2_ch);
+    }
     impedance = AD5933_CalculateImpedance(gainFactor, AD5933_FUNCTION_INC_FREQ);
     Serial.print(i);
     Serial.print(",");
@@ -246,6 +301,8 @@ void setup()
     Serial.print(GrealData);
     Serial.print(",");
     Serial.println(GimagData);
+    Serial.print(",");
+    Serial.println(mux2_ch);
     if(i==1)
     {
         /* Configuring the settling cycles */
