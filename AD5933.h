@@ -199,7 +199,7 @@ char user_input();
 void execute_user_function(char inByte);
 
 /*! Function to calculate the sweat glucose concentration from the impedance difference */
-double calculate_concentration(double delta_impedance);
+double calculate_concentration(double delta_impedance_percent);
 
 /*! Function that converts a serial input 2 characters to a single hexadecimal number */ 
 unsigned long char2hex(char buf[]);
