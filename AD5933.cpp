@@ -418,7 +418,6 @@ double AD5933_CalculateGainFactor(unsigned long calibrationImpedance,
     system_phase = phase_in_degrees((double)realData,(double)imagData);
     phase_angle_rad = phase_in_radians((double)realData,(double)imagData);
     #ifdef DEBUG3 
-     Serial.println("");
      Serial.println("Calculating the system phase");
      Serial.print("System Phase (degrees): ");Serial.println(system_phase);
      Serial.print("System Phase (radians): ");Serial.println(phase_angle_rad);

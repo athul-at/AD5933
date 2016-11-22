@@ -40,7 +40,9 @@ unsigned long   freq_step                  = 0;
 unsigned short  increment_number           = 3;
 unsigned long   settling_cycles            = 100;   // Actual settling cycle count = settling_cycles * SETTLE_MULTIPLIER
 unsigned long   external_clock_freq        = 100000;
-unsigned long calib_impedance = 18000; //18K Ohm 
+unsigned long calib_impedance              = 18000; //18K Ohm 
+//unsigned long calib_impedance              = 17750; //18K Ohm 
+unsigned int wait_minutes                   = 3;
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
 /******************************************************************************/
@@ -113,19 +115,14 @@ void setup()
   Serial.println("#                Sweat Glucose Measurement Program                           #");
   Serial.println("##############################################################################");
   Serial.println("");
+  Serial.println("Starting device initialization sequence . .");
   pinMode(AMUX_EN,OUTPUT);
   pinMode(AMUX_ADRS0,OUTPUT);
   pinMode(AMUX_ADRS1,OUTPUT);
   pinMode(AMUX2_EN,OUTPUT);
   pinMode(AMUX2_ADRS0,OUTPUT);
   pinMode(AMUX2_ADRS1,OUTPUT);
-  set_mux(1);
-//  unsigned char in_address = 0;;
-//  unsigned long  in_data = 0;
-//  unsigned long read_value = 0;
-//  byte index;
-//  char adrs_buf[2];
-//  char data_buf[2];          
+  set_mux(1);          
   Wire.begin(); 
   /* Set the clock frequecny in LTC6904 clock source */
   LTC_setclock();
@@ -150,14 +147,23 @@ void setup()
    /* Starting frequency sweep*/
   AD5933_StartSweep();
   Serial.print("Calibration resistance value: ");
-  //calib_impedance = read_number();
   Serial.println(calib_impedance);
   gainFactor = AD5933_CalculateGainFactor(calib_impedance,AD5933_FUNCTION_REPEAT_FREQ);
   Serial.print("Calculated Calibration Gain: ");
   Serial.println(gainFactor);
   set_mux(3);  // Impedance channel
-  Serial.println("Measuring baseline impedance. . .");
+  Serial.println("Device initialization sequence completed. .");
+  Serial.println("");
+  Serial.println("Add baseline sample and wait for it to be ready for measurement");
+  Serial.println("Enter any key to continue when ready.");
+  while(Serial.available() == 0);
+  while(Serial.available() >0)
+  {
+      Serial.read();
+  }
+ Serial.println("Measuring baseline impedance. . .");
  Serial.println("Sl No., Time, Frequency, Baseline Impedance(Ohms), Phase(degrees),R,I");
+ 
  impedance_sum = 0.0;
  phase_sum = 0.0;
  start_time = millis();
@@ -191,8 +197,6 @@ void setup()
   Serial.println(baseline_impedance);
   Serial.print("Average Baseline phase : ");
   Serial.println(phase_sum/increment_number);
-  Serial.println("");
-  Serial.println("");
   
   //AD5933_power_down();                
 }
@@ -200,17 +204,31 @@ void setup()
 // Loop routine runs over and over again forever
 void loop()
 {
+  Serial.println("");
+  Serial.println("");
   AD5933_standby();
   Serial.println("Measuring sweat impedance. . .");
-  Serial.println("Add Sweat sample and wait for it to be ready for measurement");
-  Serial.println(" Enter any key to continue when ready.");
+  Serial.println("Add Sweat sample");
+  Serial.print("Enter any key to start ");
+  Serial.print(wait_minutes);
+  Serial.println(" mts timer");
   while(Serial.available() == 0);
   while(Serial.available() >0)
   {
       Serial.read();
   }
-  Serial.println("");
-  Serial.println("");
+  start_time = millis();
+  for (unsigned long sec = 0; sec < wait_minutes*60;)
+  {
+    sec = (millis() - start_time)/1000;
+    if(sec % 60 == 0)
+    {
+      Serial.print("Time remaining to start measurement: ");
+      Serial.print(wait_minutes - (sec/60));
+      Serial.println(" mts");
+    }
+    delay (1000);
+  }
    /* Reset the device. */
   set_mux(3);  // Impedance channel
   AD5933_Reset();
