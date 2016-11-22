@@ -38,11 +38,10 @@ static uint8_t output_config = LTC6904_CLK_ON_CLK_INV_OFF;  //!< Keeps track of 
 unsigned long   start_freq                 = 100;
 unsigned long   freq_step                  = 0;
 unsigned short  increment_number           = 3;
-unsigned long   settling_cycles            = 100;   // Actual settling cycle count = settling_cycles * SETTLE_MULTIPLIER
+unsigned long   settling_cycles            = 1;   // Actual settling cycle count = settling_cycles * SETTLE_MULTIPLIER
 unsigned long   external_clock_freq        = 100000;
 unsigned long calib_impedance              = 18000; //18K Ohm 
-//unsigned long calib_impedance              = 17750; //18K Ohm 
-unsigned int wait_minutes                   = 3;
+unsigned int wait_minutes                   = 0;
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
 /******************************************************************************/
@@ -151,16 +150,20 @@ void setup()
   gainFactor = AD5933_CalculateGainFactor(calib_impedance,AD5933_FUNCTION_REPEAT_FREQ);
   Serial.print("Calculated Calibration Gain: ");
   Serial.println(gainFactor);
-  set_mux(3);  // Impedance channel
+  
   Serial.println("Device initialization sequence completed. .");
   Serial.println("");
   Serial.println("Add baseline sample and wait for it to be ready for measurement");
   Serial.println("Enter any key to continue when ready.");
+  AD5933_standby();
   while(Serial.available() == 0);
   while(Serial.available() >0)
   {
       Serial.read();
   }
+  AD5933_Reset();
+  AD5933_StartSweep();
+  set_mux(3);  // Impedance channel
  Serial.println("Measuring baseline impedance. . .");
  Serial.println("Sl No., Time, Frequency, Baseline Impedance(Ohms), Phase(degrees),R,I");
  
@@ -186,12 +189,8 @@ void setup()
     Serial.println(GimagData);
     impedance_sum = impedance_sum + baseline_impedance;
     phase_sum = phase_sum + impedance_phase;
-    if(i==1)
-    {
-        /* Configuring the settling cycles */
-      AD5933_settling_time(1,SETLE_MULTIPLIER); //Reducing it for a fast measurement
-    }
   }
+  set_mux(2); // Avoiding the DC voltage to be applied to the glucose sensor
   baseline_impedance = impedance_sum/increment_number;
   Serial.print("Average Baseline impedance : ");
   Serial.println(baseline_impedance);
@@ -230,21 +229,14 @@ void loop()
     delay (1000);
   }
    /* Reset the device. */
-  set_mux(3);  // Impedance channel
+  // Impedance channel
   AD5933_Reset();
   Serial.println("Reset completed. .");
-  /* Set range and gain. */
-  AD5933_SetRangeAndGain(RANGE,GAIN);
-  Serial.println("Setting range and gain done. .");
-     /*Configure the sweep parameters */
-  AD5933_ConfigSweep(start_freq,       // 10 KHz
-                       freq_step,        // 1 KHz increments
-                       increment_number);        // 500 increments
-  Serial.println("Setting the sweep settings completed. . ");
   Serial.println("");
  Serial.println("Sl No., Time, Frequency, Impedance(Ohms), Phase(degrees),R,I");
   /* Starting frequency sweep*/
   AD5933_StartSweep();
+    set_mux(3);
  impedance_sum = 0.0;
  phase_sum = 0.0;
   start_time = millis();
@@ -266,12 +258,8 @@ void loop()
     Serial.println(GimagData);
     impedance_sum = impedance_sum + impedance;
     phase_sum = phase_sum + impedance_phase;
-    if(i==1)
-    {
-        /* Configuring the settling cycles */
-      AD5933_settling_time(1,SETLE_MULTIPLIER); //Reducing it for a fast measurement
-    }
   }
+  set_mux(2);
   sweat_impedance = impedance_sum/increment_number;
   Serial.print("Average Sweat impedance : ");
   Serial.println(sweat_impedance);
