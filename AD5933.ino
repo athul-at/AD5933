@@ -41,7 +41,7 @@ unsigned short  increment_number           = 3;
 unsigned long   settling_cycles            = 1;   // Actual settling cycle count = settling_cycles * SETTLE_MULTIPLIER
 unsigned long   external_clock_freq        = 100000;
 unsigned long calib_impedance              = 18000; //18K Ohm 
-unsigned int wait_minutes                   = 0;
+unsigned int wait_minutes                   = 13;
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
 /******************************************************************************/
