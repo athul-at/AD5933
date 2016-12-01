@@ -640,7 +640,7 @@ double calculate_concentration(double delta_impedance_percent)
   double exp_factor =0.0;
   exp_factor = (delta_impedance_percent -31.7)/2.55;
   sweat_conc = 0.01 + exp(exp_factor);
-  return sweat_conc;
+  return sweat_conc*10.0;
   }
 
 
