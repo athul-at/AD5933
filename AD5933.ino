@@ -5,6 +5,7 @@
 
 #include <Wire.h>
 #include "AD5933.h" 
+#include "AD524X.h"
 #include <math.h>   
 #include "Linduino.h"
 #include "LT_I2C.h"
@@ -14,6 +15,7 @@
 // Function Declaration 
 void LTC_setclock();
 boolean configureAD5245(float R);
+void configure2M_DPOT(boolean pot_number, unsigned long int resistance); // 0 - U11 calib DPOT, 1- U3 gain DPOT
 
 // Global variables
 static uint8_t output_config = LTC6904_CLK_ON_CLK_INV_OFF;  //!< Keeps track of output configuration of LTC Clock .        
@@ -34,7 +36,8 @@ static uint8_t output_config = LTC6904_CLK_ON_CLK_INV_OFF;  //!< Keeps track of 
 # define RANGE  AD5933_RANGE_200mVpp
 # define GAIN   AD5933_GAIN_X1
 # define SETLE_MULTIPLIER AD5933_SETTLE_4X
-
+# define DPOT_CALIB 1   // Comment this line to not used DPOT for calib
+ 
 unsigned long   start_freq                 = 100;
 unsigned long   freq_step                  = 0;
 unsigned short  increment_number           = 3;
@@ -43,6 +46,9 @@ unsigned long   external_clock_freq        = 100000;
 unsigned long calib_impedance              = 18000; //18K Ohm 
 unsigned int wait_minutes                  = 0;    // Actual value = 13;
 float AD5245_resistance                    = 10000;
+unsigned long int calib_DPOT_resistance                  = calib_impedance;
+unsigned long int gain_DPOT_resistance               = 168000;
+
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
 /******************************************************************************/
@@ -60,6 +66,8 @@ double              phase_sum                = 0.0;
 extern signed short GrealData;
 extern signed short GimagData;
 unsigned long start_time;
+AD524X AD00(0x2F);  // 0 - U11 calib DPOT
+AD524X AD01(0x2C);  // 1 - U3 gain DPOT
 /******************************************************************************/
 /*! Function that reads a number from serial port*/
 unsigned long read_number()
@@ -124,7 +132,14 @@ void setup()
   pinMode(AMUX2_ADRS1,OUTPUT);
   /*Select the AD5245 (100K D.POT resistance) for first stage gain */
   boolean status_val = configureAD5245(AD5245_resistance);
-  set_mux(1);          
+  TWBR = 12;  // 400 KHz  IIC speed for AD5245 1M Ohm dual D.POT
+  configure2M_DPOT(0,calib_DPOT_resistance);
+  configure2M_DPOT(1,gain_DPOT_resistance);
+  #ifndef DPOT_CALIB
+  set_mux(1);  //Selecting fixed 18K resitance for calibration
+  #else
+   set_mux(0); // Selecting DPOT for calibartion
+  #endif     
   Wire.begin(); 
   /* Set the clock frequecny in LTC6904 clock source */
   LTC_setclock();
@@ -320,5 +335,30 @@ boolean configureAD5245(float R)
      else
        return true;
    }  
-    
 }
+
+
+void configure2M_DPOT(boolean pot_number, unsigned long int resistance)
+{
+  //Serial.print("Resistance :");Serial.println(resistance);
+  int wiper_pos = (resistance/4000);
+  //Serial.print("Wiper pos sum : "); Serial.println(wiper_pos);
+  int rem = wiper_pos%2;
+  //Serial.print("Wiper pos rem : "); Serial.println(rem);
+  wiper_pos = wiper_pos/2;
+  //Serial.print("Wiper pos : "); Serial.println(wiper_pos);
+  //Serial.print("Reverse calculated resistance :"); Serial.println(( (unsigned long)4000*((wiper_pos*2)+rem)));
+  if(pot_number)
+  {
+    AD01.write(1, 256-(wiper_pos+rem));AD01.write(0, 256-(wiper_pos));
+  }
+  else
+  {
+    AD00.write(1, 256-(wiper_pos+rem));AD00.write(0, 256-(wiper_pos));
+    #ifdef DPOT_CALIB
+    calib_impedance = (unsigned long)4000*((wiper_pos*2)+rem);
+    Serial.print("Adjusted DPOT calibration impedance to : ");Serial.println(calib_impedance);
+    #endif
+  }
+}
+
