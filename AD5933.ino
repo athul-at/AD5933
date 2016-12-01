@@ -43,7 +43,7 @@ unsigned long   freq_step                  = 0;
 unsigned short  increment_number           = 3;
 unsigned long   settling_cycles            = 1;   // Actual settling cycle count = settling_cycles * SETTLE_MULTIPLIER
 unsigned long   external_clock_freq        = 100000;
-unsigned long calib_impedance              = 18000; //18K Ohm 
+unsigned long calib_impedance              = 18060; //18K Ohm 
 unsigned int wait_minutes                  = 0;    // Actual value = 13;
 float AD5245_resistance                    = 10000;
 unsigned long int calib_DPOT_resistance                  = calib_impedance;
