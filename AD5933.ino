@@ -13,7 +13,7 @@
 
 // Function Declaration 
 void LTC_setclock();
-
+boolean configureAD5245(float R);
 
 // Global variables
 static uint8_t output_config = LTC6904_CLK_ON_CLK_INV_OFF;  //!< Keeps track of output configuration of LTC Clock .        
@@ -30,7 +30,7 @@ static uint8_t output_config = LTC6904_CLK_ON_CLK_INV_OFF;  //!< Keeps track of 
  /******************************************************************************/
 /*****************  EIS system configuration settings  ************************/
 /******************************************************************************/
- 
+# define AD5245_ADDR  0x2D
 # define RANGE  AD5933_RANGE_200mVpp
 # define GAIN   AD5933_GAIN_X1
 # define SETLE_MULTIPLIER AD5933_SETTLE_4X
@@ -41,7 +41,8 @@ unsigned short  increment_number           = 3;
 unsigned long   settling_cycles            = 1;   // Actual settling cycle count = settling_cycles * SETTLE_MULTIPLIER
 unsigned long   external_clock_freq        = 100000;
 unsigned long calib_impedance              = 18000; //18K Ohm 
-unsigned int wait_minutes                   = 13;
+unsigned int wait_minutes                  = 0;    // Actual value = 13;
+float AD5245_resistance                    = 10000;
 /******************************************************************************/
 /************************ Variables Definitions *******************************/
 /******************************************************************************/
@@ -121,6 +122,8 @@ void setup()
   pinMode(AMUX2_EN,OUTPUT);
   pinMode(AMUX2_ADRS0,OUTPUT);
   pinMode(AMUX2_ADRS1,OUTPUT);
+  /*Select the AD5245 (100K D.POT resistance) for first stage gain */
+  boolean status_val = configureAD5245(AD5245_resistance);
   set_mux(1);          
   Wire.begin(); 
   /* Set the clock frequecny in LTC6904 clock source */
@@ -289,4 +292,33 @@ void LTC_setclock()
 }
 
 
-
+boolean configureAD5245(float R) 
+{  
+  
+    Serial.print("Setting resistance of AD5245 to ");
+    Serial.print(R);
+    Serial.println(" Ohms.");
+  
+   int i2cStatus;
+  
+   int Rw = 50; // wiper resistance
+   float Rab = 100*pow(10,3); // max resistance
+   
+   if (R > Rab) {
+     return false;
+   } else {
+  
+     int D = int(( 256 * (R + 2*Rw) ) / Rab);
+     
+     Wire.beginTransmission(AD5245_ADDR); // master sends a 7-bit slave address
+     Wire.write(0x00); // instruction byte
+     Wire.write(D);    // data byte
+     i2cStatus = Wire.endTransmission();
+     
+     if (i2cStatus)
+       return false;
+     else
+       return true;
+   }  
+    
+}
